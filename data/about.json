@@ -1,1 +1,29 @@
-[]
+{
+  "bio": "Detail-oriented Data Analyst with experience in SQL, Microsoft Excel, Power BI, and Python for data cleaning, statistical analysis, and dashboard creation. Skilled in database management, optimization, and data visualization to generate insights and support decision-making. Experienced in predictive modeling, data mining, and developing interactive dashboards.",
+  "skills": [
+    "SQL (PostgreSQL, SQL Server)",
+    "Microsoft Excel (Pivot Table, Power Query)",
+    "Python for Data Analysis",
+    "Data Visualization (Power BI, Tableau)",
+    "Data Cleaning & Dashboard Creation",
+    "Statistical Analysis",
+    "Predictive Modeling & Data Mining",
+    "Database Management & Optimization",
+    "Git & GitHub",
+    "REST API Integration (Basic)"
+  ],
+  "journey": [
+    {
+      "year": "2019–2023",
+      "description": "Completed Bachelor's Degree in Information Technology at Binus University with a GPA of 3.27."
+    },
+    {
+      "year": "2023–2025",
+      "description": "Worked as an Application Developer at S21 MicroPiranti Computer, focusing on SQL-based data validation, reporting accuracy, and process standardization."
+    },
+    {
+      "year": "2025",
+      "description": "Transitioned into Data Analytics and Engineering by building personal projects, including an HR Attrition Dashboard in Power BI and a News Data Engineering Pipeline with Python and PostgreSQL."
+    }
+  ]
+}
