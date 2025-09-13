@@ -1,0 +1,8 @@
+[
+  {
+    "title": "Portfolio Website",
+    "description": "A personal portfolio built with Next.js and TailwindCSS.",
+    "tech": ["Next.js", "TailwindCSS"],
+    "link": "https://example.com"
+  }
+]
