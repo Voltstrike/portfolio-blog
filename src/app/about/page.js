@@ -1,41 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
+import about from "../../../data/about.json"; // adjust path if needed
 
 export default function AboutPage() {
-  const [about, setAbout] = useState({
-    bio: "",
-    skills: [],
-    journey: [],
-  });
-
-  // Load data from localStorage
-  const loadAbout = () => {
-    const saved = localStorage.getItem("about");
-    if (saved) {
-      try {
-        setAbout({ bio: "", skills: [], journey: [], ...JSON.parse(saved) });
-      } catch {
-        console.error("Invalid about.json, using defaults");
-      }
-    }
-  };
-
-  useEffect(() => {
-    loadAbout();
-
-    // ✅ Auto-update when localStorage changes (from Admin page)
-    const handleStorageChange = (e) => {
-      if (e.key === "about") {
-        loadAbout();
-      }
-    };
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
-
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">About Me</h1>
@@ -71,7 +37,8 @@ export default function AboutPage() {
           <ul className="space-y-2">
             {about.journey.map((j, i) => (
               <li key={i} className="text-gray-700">
-                <span className="font-bold">{j.year}</span> — {j.text}
+                <span className="font-bold">{j.year}</span> —{" "}
+                {j.description || j.text}
               </li>
             ))}
           </ul>
