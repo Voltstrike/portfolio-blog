@@ -1,35 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
 import Link from "next/link";
 
+// Import JSON directly
+import about from "../../data/about.json";
+import projects from "../../data/projects.json";
+import articles from "../../data/articles.json";
+
 export default function HomePage() {
-  const [about, setAbout] = useState({ bio: "" });
-  const [projects, setProjects] = useState([]);
-  const [articles, setArticles] = useState([]);
-
-  // Load JSON files from /data
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const aboutRes = await fetch("/about.json");
-        const aboutData = await aboutRes.json();
-        setAbout(aboutData);
-
-        const projectsRes = await fetch("/projects.json");
-        const projectsData = await projectsRes.json();
-        setProjects(projectsData);
-
-        const articlesRes = await fetch("/articles.json");
-        const articlesData = await articlesRes.json();
-        setArticles(articlesData);
-      } catch (err) {
-        console.error("Failed to load homepage data", err);
-      }
-    };
-
-    loadData();
-  }, []);
-
   // Sort newest first
   const latestProjects = [...projects]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
