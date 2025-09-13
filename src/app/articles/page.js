@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import articles from "../../../data/articles.json"; 
 
 export default function ArticlesPage() {
   const [articles, setArticles] = useState([]);
