@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import projects from "../../../data/projects.json"; 
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
