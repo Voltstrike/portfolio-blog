@@ -44,7 +44,7 @@ export default function RootLayout({ children }) {
           transition={{ duration: 0.6 }}
         >
           <nav className="container mx-auto flex justify-between items-center py-4 px-6">
-            <h1 className="text-xl font-bold">MyPortfolio</h1>
+            <h1 className="text-xl font-bold">Mikail Crito Husada</h1>
             <ul className="flex space-x-6">
               <li><Link href="/">Home</Link></li>
               <li><Link href="/about">About</Link></li>
@@ -85,7 +85,7 @@ export default function RootLayout({ children }) {
         >
           <div className="container mx-auto flex flex-col md:flex-row justify-between items-center px-6 text-gray-600 dark:text-gray-400">
             <p className="mb-4 md:mb-0">
-              © {new Date().getFullYear()} MyPortfolio. Built with Next.js & Tailwind CSS.
+              © {new Date().getFullYear()} Mikail Crito Husada. Built with Next.js & Tailwind CSS.
             </p>
             <div className="flex space-x-6">
               <a
