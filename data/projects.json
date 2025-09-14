@@ -10,10 +10,12 @@
     "slug": "The Website Blog",
     "createdAt": "2025-09-14T13:55:13.814Z"
   },
-  {
-    "slug": "Deep Learning",
-    "title": "Project: Handwritten Digit Recognition with CNN",
-    "description": "This project implements a Convolutional Neural Network (CNN) to classify handwritten digits from the MNIST dataset. The model was trained using deep learning techniques to automatically extract spatial features from grayscale digit images, achieving high accuracy in digit recognition.\n\nKey Highlights:\n\nDataset: MNIST (70,000 images of handwritten digits, 28x28 grayscale)\n\nApproach: Convolutional Neural Network (CNN) built with deep learning libraries\n\nTechniques: Convolution layers for feature extraction, pooling for dimensionality reduction, and fully connected layers for classification\n\nAchievements: Achieved >98% test accuracy (depending on hyperparameters and training epochs)\n\nTools: Python, TensorFlow/Keras (or PyTorch if that’s what you used), Google Colab\n\nWhy it matters:\nThis project demonstrates the ability to design and train deep learning models for computer vision tasks. It highlights practical skills in data preprocessing, neural network architecture design, and performance evaluation, which are fundamental in real-world AI applications like OCR, image classification, and pattern recognition.\n\nLink to the Project : https://colab.research.google.com/drive/1y0WAJ9L8ZGTdOrY8te5KfPjOGQc9vIJ_?usp=sharing",
-    "createdAt": "2025-09-14T22:49:03.768Z"
-  }
+ {
+  "slug": "deep-learning",
+  "title": "Handwritten Digit Recognition with CNN",
+  "description": "This project implements a CNN to classify handwritten digits from MNIST.",
+  "createdAt": "2025-09-15",
+  "content": "Full description here...",
+  "link": "https://colab.research.google.com/drive/1y0WAJ9L8ZGTdOrY8teSkFPjOGQcC9vJ_?usp=sharing"
+}
 ]
