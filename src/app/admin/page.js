@@ -6,7 +6,7 @@ import { motion } from "framer-motion"
 export default function AdminPage() {
   const sections = [
     { name: "About Me", description: "Edit your bio and skills.", link: "/admin/about" },
-    { name: "Projects", description: "Add or edit portfolio projects.", link: "/admin/projects" },
+    { name: "Projects", description: "Add, edit, delete portfolio projects.", link: "/admin/projects" },
     { name: "Articles", description: "Write and manage blog posts.", link: "/admin/articles" },
   ]
 
