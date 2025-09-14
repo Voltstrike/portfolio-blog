@@ -1,8 +1,13 @@
 [
   {
     "title": "Portfolio Website",
-    "description": "A personal portfolio built with Next.js and TailwindCSS.",
-    "tech": ["Next.js", "TailwindCSS"],
-    "link": "https://example.com"
+    "description": "This is the portfolio website project for this website. still on progress",
+    "tech": [
+      "Next.js",
+      "TailwindCSS"
+    ],
+    "link": "https://example.com",
+    "slug": "The Website Blog",
+    "createdAt": "2025-09-14T13:55:13.814Z"
   }
 ]
