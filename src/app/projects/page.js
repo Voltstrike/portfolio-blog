@@ -37,10 +37,7 @@ export default function ProjectsPage() {
                     ? p.description.slice(0, 120) + "..."
                     : p.description}
                 </p>
-                <Link
-                  href="#"
-                  className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                >
+                <Link href={`/projects/${p.slug}`} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
                   View Project →
                 </Link>
               </motion.div>
