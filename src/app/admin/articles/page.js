@@ -1,75 +1,127 @@
-"use client"
-import { useState, useEffect } from "react"
+"use client";
+import { useEffect, useState } from "react";
 
 export default function AdminArticlesPage() {
-  const [articles, setArticles] = useState([])
-  const [title, setTitle] = useState("")
-  const [content, setContent] = useState("")
+  const [articles, setArticles] = useState([]);
+  const [form, setForm] = useState({ slug: "", title: "", content: "" });
+  const [editing, setEditing] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const res = await fetch("/api/articles")
-      const data = await res.json()
-      setArticles(data)
-    }
-    fetchData()
-  }, [])
+    fetch("/api/articles").then((res) => res.json()).then(setArticles);
+  }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    await fetch("/api/articles", {
+  const addArticle = async (e) => {
+    e.preventDefault();
+    const res = await fetch("/api/articles", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, content })
-    })
-    alert("Article added!")
-    setTitle("")
-    setContent("")
+      body: JSON.stringify(form),
+    });
+    const newArticle = await res.json();
+    setArticles([...articles, newArticle]);
+    setForm({ slug: "", title: "", content: "" });
+  };
 
-    // reload
-    const res = await fetch("/api/articles")
-    const data = await res.json()
-    setArticles(data)
-  }
+  const updateArticle = async () => {
+    const res = await fetch("/api/articles", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    const updated = await res.json();
+    setArticles(articles.map((a) => (a.slug === updated.slug ? updated : a)));
+    setEditing(null);
+    setForm({ slug: "", title: "", content: "" });
+  };
+
+  const deleteArticle = async (slug) => {
+    await fetch("/api/articles", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug }),
+    });
+    setArticles(articles.filter((a) => a.slug !== slug));
+  };
 
   return (
-    <main className="max-w-4xl mx-auto px-6 py-20">
+    <div className="max-w-3xl mx-auto p-6 space-y-6">
       <h1 className="text-3xl font-bold mb-6">Manage Articles</h1>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6 mb-10">
+      {/* Add / Edit Form */}
+      <form
+        onSubmit={(e) => {
+          editing ? (e.preventDefault(), updateArticle()) : addArticle(e);
+        }}
+        className="space-y-3"
+      >
         <input
-          type="text"
-          placeholder="Article title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full p-3 rounded bg-gray-800 border border-gray-700"
+          placeholder="Slug"
+          className="w-full border p-2 rounded"
+          value={form.slug}
+          onChange={(e) => setForm({ ...form, slug: e.target.value })}
+          disabled={!!editing}
+          required
+        />
+        <input
+          placeholder="Title"
+          className="w-full border p-2 rounded"
+          value={form.title}
+          onChange={(e) => setForm({ ...form, title: e.target.value })}
+          required
         />
         <textarea
-          placeholder="Write your content..."
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="w-full p-3 rounded bg-gray-800 border border-gray-700"
-          rows={6}
+          placeholder="Content"
+          className="w-full border p-2 rounded"
+          rows={4}
+          value={form.content}
+          onChange={(e) => setForm({ ...form, content: e.target.value })}
+          required
         />
-        <button type="submit" className="bg-indigo-600 px-6 py-2 rounded">
-          Publish
+        <button className="bg-blue-600 text-white px-4 py-2 rounded">
+          {editing ? "Update Article" : "Add Article"}
         </button>
+        {editing && (
+          <button
+            type="button"
+            onClick={() => {
+              setEditing(null);
+              setForm({ slug: "", title: "", content: "" });
+            }}
+            className="ml-2 bg-gray-500 text-white px-4 py-2 rounded"
+          >
+            Cancel
+          </button>
+        )}
       </form>
 
-      {/* Article List */}
-      <h2 className="text-2xl font-semibold mb-4">Existing Articles</h2>
-      <ul className="space-y-4">
+      {/* List Articles */}
+      <ul className="space-y-3">
         {articles.map((a) => (
-          <li key={a.id} className="p-4 border rounded bg-gray-900">
-            <h3 className="font-semibold text-lg">{a.title}</h3>
-            <p className="text-sm text-gray-500">
-              {new Date(a.date).toLocaleDateString()}
-            </p>
-            <p className="mt-2 text-gray-300 line-clamp-2">{a.content}</p>
+          <li
+            key={a.slug}
+            className="flex justify-between items-center border p-3 rounded"
+          >
+            <span>{a.title}</span>
+            <div className="space-x-3">
+              <button
+                onClick={() => {
+                  setEditing(a.slug);
+                  setForm(a);
+                }}
+                className="text-yellow-500 hover:underline"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => deleteArticle(a.slug)}
+                className="text-red-500 hover:underline"
+              >
+                Delete
+              </button>
+            </div>
           </li>
         ))}
       </ul>
-    </main>
-  )
+    </div>
+  );
 }
