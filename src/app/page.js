@@ -20,6 +20,20 @@ export default function HomePage() {
     <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Hero Section */}
       <section className="text-center py-20 px-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 text-white">
+        {/* Avatar */}
+        <div className="relative w-32 h-32 mx-auto mb-6">
+          <div className="absolute inset-0 rounded-full bg-white/20 p-1">
+            <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-gray-900">
+              <img
+                src="https://ui-avatars.com/api/?name=Mikail+Husada&background=4f46e5&color=fff&size=256"
+                alt="Profile Picture"
+                className="w-32 h-32 rounded-full object-cover"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Title + Bio */}
         <motion.h1
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -54,82 +68,81 @@ export default function HomePage() {
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-6 py-16 space-y-16">
-        {/* Latest Projects */}
-<section>
-  <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-    🚀 Latest Projects
-  </h2>
-  {latestProjects.length > 0 ? (
-    <div className="grid md:grid-cols-3 gap-8">
-      {latestProjects.map((p, i) => (
-        <motion.div
-          key={i}
-          whileHover={{ scale: 1.03 }}
-          className="p-6 bg-white dark:bg-gray-800 shadow-lg rounded-2xl border-t-4 border-blue-500"
-        >
-          <h3 className="text-xl font-semibold mb-2">{p.title}</h3>
-          <p className="text-sm text-gray-500 mb-2">
-            {p.createdAt
-              ? new Date(p.createdAt).toLocaleDateString()
-              : ""}
-          </p>
-          <p className="text-gray-700 dark:text-gray-300 mb-4">
-            {p.description?.length > 100
-              ? p.description.slice(0, 100) + "..."
-              : p.description}
-          </p>
-          <Link
-            href="/projects"
-            className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-          >
-            View More →
-          </Link>
-        </motion.div>
-      ))}
-    </div>
-  ) : (
-    <p className="text-gray-500">No projects added yet.</p>
-  )}
-</section>
+        {/* Projects */}
+        <section>
+          <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
+            🚀 Latest Projects
+          </h2>
+          {latestProjects.length > 0 ? (
+            <div className="grid md:grid-cols-3 gap-8">
+              {latestProjects.map((p, i) => (
+                <motion.div
+                  key={i}
+                  whileHover={{ scale: 1.03 }}
+                  className="p-6 bg-white dark:bg-gray-800 shadow-lg rounded-2xl border-t-4 border-blue-500"
+                >
+                  <h3 className="text-xl font-semibold mb-2">{p.title}</h3>
+                  <p className="text-sm text-gray-500 mb-2">
+                    {p.createdAt
+                      ? new Date(p.createdAt).toLocaleDateString()
+                      : ""}
+                  </p>
+                  <p className="text-gray-700 dark:text-gray-300 mb-4">
+                    {p.description?.length > 100
+                      ? p.description.slice(0, 100) + "..."
+                      : p.description}
+                  </p>
+                  <Link
+                    href="/projects"
+                    className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                  >
+                    View More →
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">No projects added yet.</p>
+          )}
+        </section>
 
-{/* Latest Articles */}
-<section>
-  <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-purple-500 to-pink-600 bg-clip-text text-transparent">
-    ✍️ Latest Articles
-  </h2>
-  {latestArticles.length > 0 ? (
-    <div className="grid md:grid-cols-2 gap-8">
-      {latestArticles.map((a, i) => (
-        <motion.div
-          key={i}
-          whileHover={{ scale: 1.02 }}
-          className="p-6 bg-white dark:bg-gray-800 shadow-lg rounded-2xl border-t-4 border-purple-500"
-        >
-          <h3 className="text-xl font-semibold mb-2">{a.title}</h3>
-          <p className="text-sm text-gray-500 mb-2">
-            {a.createdAt
-              ? new Date(a.createdAt).toLocaleDateString()
-              : ""}
-          </p>
-          <p className="text-gray-700 dark:text-gray-300 mb-4">
-            {a.content?.length > 120
-              ? a.content.slice(0, 120) + "..."
-              : a.content}
-          </p>
-          <Link
-            href={`/articles/${a.slug}`}
-            className="text-purple-600 dark:text-purple-400 hover:underline font-medium"
-          >
-            Read More →
-          </Link>
-        </motion.div>
-      ))}
-    </div>
-  ) : (
-    <p className="text-gray-500">No articles published yet.</p>
-  )}
-</section>
-
+        {/* Articles */}
+        <section>
+          <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-purple-500 to-pink-600 bg-clip-text text-transparent">
+            ✍️ Latest Articles
+          </h2>
+          {latestArticles.length > 0 ? (
+            <div className="grid md:grid-cols-2 gap-8">
+              {latestArticles.map((a, i) => (
+                <motion.div
+                  key={i}
+                  whileHover={{ scale: 1.02 }}
+                  className="p-6 bg-white dark:bg-gray-800 shadow-lg rounded-2xl border-t-4 border-purple-500"
+                >
+                  <h3 className="text-xl font-semibold mb-2">{a.title}</h3>
+                  <p className="text-sm text-gray-500 mb-2">
+                    {a.createdAt
+                      ? new Date(a.createdAt).toLocaleDateString()
+                      : ""}
+                  </p>
+                  <p className="text-gray-700 dark:text-gray-300 mb-4">
+                    {a.content?.length > 120
+                      ? a.content.slice(0, 120) + "..."
+                      : a.content}
+                  </p>
+                  <Link
+                    href={`/articles/${a.slug}`}
+                    className="text-purple-600 dark:text-purple-400 hover:underline font-medium"
+                  >
+                    Read More →
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">No articles published yet.</p>
+          )}
+        </section>
       </div>
     </div>
   );
