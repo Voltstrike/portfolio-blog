@@ -28,7 +28,9 @@ export default function ProjectDetailPage() {
       </p>
 
       <p className="text-gray-700 dark:text-gray-300 mb-6 whitespace-pre-line">
-        {project.content}
+        {project.content?.trim()
+          ? project.content
+          :project.description}
       </p>
 
       {/* 🔗 Show link if available */}
