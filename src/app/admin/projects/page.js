@@ -13,10 +13,26 @@ export default function AdminProjectsPage() {
   }, []);
 
   // Save to localStorage (mock persistence for now)
-  const saveProjects = (newProjects) => {
-    setProjects(newProjects);
-    localStorage.setItem("projects", JSON.stringify(newProjects));
-  };
+  const saveProjects = async (newProjects) => {
+  try {
+    const res = await fetch("/api/github/commit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        file: "data/projects.json", // relative to repo root
+        content: JSON.stringify(newProjects, null, 2),
+        message: "Update projects.json via Admin Panel",
+      }),
+    });
+
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+
+    alert("✅ Projects updated successfully on GitHub!");
+  } catch (err) {
+    alert("❌ Failed to save: " + err.message);
+  }
+};
 
   // Handle add or update
   const handleSubmit = (e) => {

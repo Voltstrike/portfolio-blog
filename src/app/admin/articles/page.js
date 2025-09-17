@@ -22,6 +22,29 @@ export default function AdminArticlesPage() {
     setForm({ slug: "", title: "", content: "" });
   };
 
+  const saveArticles = async (newArticles) => {
+  try {
+    const res = await fetch("/api/github/commit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        file: "data/articles.json",
+        content: JSON.stringify(newArticles, null, 2),
+        message: "Update articles.json via Admin Panel",
+      }),
+    });
+
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+
+    alert("✅ Articles updated successfully!");
+  } catch (err) {
+    alert("❌ Failed to save: " + err.message);
+  }
+};
+
+
+
   const updateArticle = async () => {
     const res = await fetch("/api/articles", {
       method: "PUT",

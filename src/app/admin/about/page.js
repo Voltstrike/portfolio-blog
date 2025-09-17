@@ -8,14 +8,27 @@ export default function AdminAboutPage() {
     fetch("/api/about").then((res) => res.json()).then(setAbout);
   }, []);
 
-  const saveAbout = async () => {
-    await fetch("/api/about", {
-      method: "PUT",
+  const saveAbout = async (newAbout) => {
+  try {
+    const res = await fetch("/api/github/commit", {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(about),
+      body: JSON.stringify({
+        file: "data/about.json",
+        content: JSON.stringify(newAbout, null, 2),
+        message: "Update about.json via Admin Panel",
+      }),
     });
-    alert("About updated!");
-  };
+
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+
+    alert("✅ About page updated successfully!");
+  } catch (err) {
+    alert("❌ Failed to save: " + err.message);
+  }
+};
+
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-6">
