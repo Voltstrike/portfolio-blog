@@ -7,7 +7,9 @@ export default function AdminProjectsPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [link, setLink] = useState("");
+  const [editId, setEditId] = useState(null);
 
+  // Load projects
   useEffect(() => {
     const load = async () => {
       const res = await fetch("/data/projects.json");
@@ -29,17 +31,30 @@ export default function AdminProjectsPage() {
     });
   };
 
-  const addProject = () => {
+  // Add or update project
+  const handleSave = () => {
     if (!title.trim() || !description.trim()) return;
-    const newProject = {
-      id: Date.now(),
-      title,
-      description,
-      link,
-      createdAt: new Date().toISOString(),
-      slug: slugify(title), // ✅ generate slug
-    };
-    const updated = [...projects, newProject];
+
+    let updated;
+    if (editId) {
+      updated = projects.map((p) =>
+        p.id === editId
+          ? { ...p, title, description, link, slug: slugify(title) }
+          : p
+      );
+      setEditId(null);
+    } else {
+      const newProject = {
+        id: Date.now(),
+        title,
+        description,
+        link,
+        createdAt: new Date().toISOString(),
+        slug: slugify(title),
+      };
+      updated = [...projects, newProject];
+    }
+
     setProjects(updated);
     saveToGitHub("projects.json", updated);
     setTitle("");
@@ -47,10 +62,26 @@ export default function AdminProjectsPage() {
     setLink("");
   };
 
+  // Delete project
+  const handleDelete = (id) => {
+    const updated = projects.filter((p) => p.id !== id);
+    setProjects(updated);
+    saveToGitHub("projects.json", updated);
+  };
+
+  // Load project into form for editing
+  const handleEdit = (project) => {
+    setTitle(project.title);
+    setDescription(project.description);
+    setLink(project.link || "");
+    setEditId(project.id);
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Admin – Projects</h1>
 
+      {/* Form */}
       <div className="mb-6 space-y-2">
         <input
           className="w-full p-2 border rounded"
@@ -72,17 +103,37 @@ export default function AdminProjectsPage() {
           onChange={(e) => setLink(e.target.value)}
         />
         <button
-          onClick={addProject}
+          onClick={handleSave}
           className="px-4 py-2 bg-blue-600 text-white rounded"
         >
-          ➕ Add Project
+          {editId ? "✏️ Update Project" : "➕ Add Project"}
         </button>
       </div>
 
+      {/* List */}
       <ul className="space-y-4">
         {projects.map((p) => (
-          <li key={p.id} className="p-4 bg-gray-100 rounded">
-            <strong>{p.title}</strong> ({p.slug})
+          <li
+            key={p.id}
+            className="p-4 bg-gray-100 dark:bg-gray-800 rounded flex justify-between items-center"
+          >
+            <div>
+              <strong>{p.title}</strong> <span className="text-sm">({p.slug})</span>
+            </div>
+            <div className="space-x-2">
+              <button
+                onClick={() => handleEdit(p)}
+                className="px-2 py-1 bg-yellow-500 text-white rounded"
+              >
+                ✏️ Edit
+              </button>
+              <button
+                onClick={() => handleDelete(p.id)}
+                className="px-2 py-1 bg-red-600 text-white rounded"
+              >
+                🗑 Delete
+              </button>
+            </div>
           </li>
         ))}
       </ul>
