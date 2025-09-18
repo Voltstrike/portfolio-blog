@@ -1,152 +1,88 @@
 "use client";
-import { useState, useEffect } from "react";
-import projectsData from "../../../../data/projects.json";
+import { useEffect, useState } from "react";
+import { slugify } from "@/utils/slugify";
 
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState([]);
-  const [form, setForm] = useState({ title: "", description: "", content: "", link: "" });
-  const [editIndex, setEditIndex] = useState(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [link, setLink] = useState("");
 
-  // Load existing projects
   useEffect(() => {
-    setProjects(projectsData);
+    const load = async () => {
+      const res = await fetch("/data/projects.json");
+      const data = await res.json();
+      setProjects(data);
+    };
+    load();
   }, []);
 
-  // Save to localStorage (mock persistence for now)
-  const saveProjects = async (newProjects) => {
-  try {
-    const res = await fetch("/api/github/commit", {
+  const saveToGitHub = async (file, updated) => {
+    await fetch("/api/github/commit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        file: "data/projects.json", // relative to repo root
-        content: JSON.stringify(newProjects, null, 2),
-        message: "Update projects.json via Admin Panel",
+        file: `data/${file}`,
+        content: JSON.stringify(updated, null, 2),
+        message: `Update ${file} via Admin`,
       }),
     });
-
-    const result = await res.json();
-    if (!result.success) throw new Error(result.error);
-
-    alert("✅ Projects updated successfully on GitHub!");
-  } catch (err) {
-    alert("❌ Failed to save: " + err.message);
-  }
-};
-
-  // Handle add or update
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (editIndex !== null) {
-      const updated = [...projects];
-      updated[editIndex] = {
-        ...form,
-        slug: form.title.toLowerCase().replace(/\s+/g, "-"),
-        createdAt: updated[editIndex].createdAt, // keep old date
-      };
-      saveProjects(updated);
-      setEditIndex(null);
-    } else {
-      saveProjects([
-        ...projects,
-        {
-          ...form,
-          slug: form.title.toLowerCase().replace(/\s+/g, "-"),
-          createdAt: new Date().toISOString(),
-        },
-      ]);
-    }
-    setForm({ title: "", description: "", content: "", link: "" });
   };
 
-  const handleEdit = (i) => {
-    setForm(projects[i]);
-    setEditIndex(i);
-  };
-
-  const handleDelete = (i) => {
-    const updated = projects.filter((_, idx) => idx !== i);
-    saveProjects(updated);
+  const addProject = () => {
+    if (!title.trim() || !description.trim()) return;
+    const newProject = {
+      id: Date.now(),
+      title,
+      description,
+      link,
+      createdAt: new Date().toISOString(),
+      slug: slugify(title), // ✅ generate slug
+    };
+    const updated = [...projects, newProject];
+    setProjects(updated);
+    saveToGitHub("projects.json", updated);
+    setTitle("");
+    setDescription("");
+    setLink("");
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Manage Projects</h1>
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">Admin – Projects</h1>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-3 mb-8">
+      <div className="mb-6 space-y-2">
         <input
-          type="text"
+          className="w-full p-2 border rounded"
           placeholder="Project Title"
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-          className="w-full border p-2 rounded"
-          required
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
         />
         <textarea
-          placeholder="Short Description"
-          value={form.description}
-          onChange={(e) => setForm({ ...form, description: e.target.value })}
-          className="w-full border p-2 rounded"
-          required
-        />
-        <textarea
-          placeholder="Full Content"
-          value={form.content}
-          onChange={(e) => setForm({ ...form, content: e.target.value })}
-          className="w-full border p-2 rounded"
-          rows="5"
-          required
+          className="w-full p-2 border rounded"
+          placeholder="Description"
+          rows={3}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
         />
         <input
-          type="text"
-          placeholder="Project Link (GitHub, Colab, etc.)"
-          value={form.link || ""}
-          onChange={(e) => setForm({ ...form, link: e.target.value })}
-          className="w-full border p-2 rounded"
+          className="w-full p-2 border rounded"
+          placeholder="Project Link"
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
         />
-
         <button
-          type="submit"
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          onClick={addProject}
+          className="px-4 py-2 bg-blue-600 text-white rounded"
         >
-          {editIndex !== null ? "Update Project" : "Add Project"}
+          ➕ Add Project
         </button>
-      </form>
+      </div>
 
-      {/* Projects List */}
       <ul className="space-y-4">
-        {projects.map((p, i) => (
-          <li
-            key={i}
-            className="p-4 border rounded-lg bg-white dark:bg-gray-900 shadow flex flex-col"
-          >
-            <h3 className="text-lg font-bold">{p.title}</h3>
-            <p className="text-gray-600 dark:text-gray-300">{p.description}</p>
-            {p.link && (
-              <a
-                href={p.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-500 hover:underline mt-2"
-              >
-                🔗 Preview Link
-              </a>
-            )}
-            <div className="mt-3 flex gap-2">
-              <button
-                onClick={() => handleEdit(i)}
-                className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(i)}
-                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-              >
-                Delete
-              </button>
-            </div>
+        {projects.map((p) => (
+          <li key={p.id} className="p-4 bg-gray-100 rounded">
+            <strong>{p.title}</strong> ({p.slug})
           </li>
         ))}
       </ul>

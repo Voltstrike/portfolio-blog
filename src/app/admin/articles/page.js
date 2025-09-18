@@ -1,147 +1,79 @@
 "use client";
 import { useEffect, useState } from "react";
+import { slugify } from "@/utils/slugify";
 
 export default function AdminArticlesPage() {
   const [articles, setArticles] = useState([]);
-  const [form, setForm] = useState({ slug: "", title: "", content: "" });
-  const [editing, setEditing] = useState(null);
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
 
   useEffect(() => {
-    fetch("/api/articles").then((res) => res.json()).then(setArticles);
+    const load = async () => {
+      const res = await fetch("/data/articles.json");
+      const data = await res.json();
+      setArticles(data);
+    };
+    load();
   }, []);
 
-  const addArticle = async (e) => {
-    e.preventDefault();
-    const res = await fetch("/api/articles", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    const newArticle = await res.json();
-    setArticles([...articles, newArticle]);
-    setForm({ slug: "", title: "", content: "" });
-  };
-
-  const saveArticles = async (newArticles) => {
-  try {
-    const res = await fetch("/api/github/commit", {
+  const saveToGitHub = async (file, updated) => {
+    await fetch("/api/github/commit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        file: "data/articles.json",
-        content: JSON.stringify(newArticles, null, 2),
-        message: "Update articles.json via Admin Panel",
+        file: `data/${file}`,
+        content: JSON.stringify(updated, null, 2),
+        message: `Update ${file} via Admin`,
       }),
     });
-
-    const result = await res.json();
-    if (!result.success) throw new Error(result.error);
-
-    alert("✅ Articles updated successfully!");
-  } catch (err) {
-    alert("❌ Failed to save: " + err.message);
-  }
-};
-
-
-
-  const updateArticle = async () => {
-    const res = await fetch("/api/articles", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    const updated = await res.json();
-    setArticles(articles.map((a) => (a.slug === updated.slug ? updated : a)));
-    setEditing(null);
-    setForm({ slug: "", title: "", content: "" });
   };
 
-  const deleteArticle = async (slug) => {
-    await fetch("/api/articles", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug }),
-    });
-    setArticles(articles.filter((a) => a.slug !== slug));
+  const addArticle = () => {
+    if (!title.trim() || !content.trim()) return;
+    const newArticle = {
+      id: Date.now(),
+      title,
+      content,
+      date: new Date().toISOString(),
+      slug: slugify(title), // ✅ generate slug
+    };
+    const updated = [...articles, newArticle];
+    setArticles(updated);
+    saveToGitHub("articles.json", updated);
+    setTitle("");
+    setContent("");
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-6">
-      <h1 className="text-3xl font-bold mb-6">Manage Articles</h1>
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">Admin – Articles</h1>
 
-      {/* Add / Edit Form */}
-      <form
-        onSubmit={(e) => {
-          editing ? (e.preventDefault(), updateArticle()) : addArticle(e);
-        }}
-        className="space-y-3"
-      >
+      <div className="mb-6 space-y-2">
         <input
-          placeholder="Slug"
-          className="w-full border p-2 rounded"
-          value={form.slug}
-          onChange={(e) => setForm({ ...form, slug: e.target.value })}
-          disabled={!!editing}
-          required
-        />
-        <input
+          className="w-full p-2 border rounded"
           placeholder="Title"
-          className="w-full border p-2 rounded"
-          value={form.title}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
-          required
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
         />
         <textarea
+          className="w-full p-2 border rounded"
           placeholder="Content"
-          className="w-full border p-2 rounded"
           rows={4}
-          value={form.content}
-          onChange={(e) => setForm({ ...form, content: e.target.value })}
-          required
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
         />
-        <button className="bg-blue-600 text-white px-4 py-2 rounded">
-          {editing ? "Update Article" : "Add Article"}
+        <button
+          onClick={addArticle}
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          ➕ Add Article
         </button>
-        {editing && (
-          <button
-            type="button"
-            onClick={() => {
-              setEditing(null);
-              setForm({ slug: "", title: "", content: "" });
-            }}
-            className="ml-2 bg-gray-500 text-white px-4 py-2 rounded"
-          >
-            Cancel
-          </button>
-        )}
-      </form>
+      </div>
 
-      {/* List Articles */}
-      <ul className="space-y-3">
+      <ul className="space-y-4">
         {articles.map((a) => (
-          <li
-            key={a.slug}
-            className="flex justify-between items-center border p-3 rounded"
-          >
-            <span>{a.title}</span>
-            <div className="space-x-3">
-              <button
-                onClick={() => {
-                  setEditing(a.slug);
-                  setForm(a);
-                }}
-                className="text-yellow-500 hover:underline"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => deleteArticle(a.slug)}
-                className="text-red-500 hover:underline"
-              >
-                Delete
-              </button>
-            </div>
+          <li key={a.id} className="p-4 bg-gray-100 rounded">
+            <strong>{a.title}</strong> ({a.slug})
           </li>
         ))}
       </ul>
