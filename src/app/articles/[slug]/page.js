@@ -1,19 +1,49 @@
 "use client";
 import { useParams } from "next/navigation";
-import articles from "../../../../data/articles.json";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+
+// 🔹 Helper to make slug from title
+const slugify = (text) =>
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
 
 export default function ArticleDetailPage() {
   const { slug } = useParams();
+  const [article, setArticle] = useState(null);
 
-  // Find article by slug
-  const article = articles.find((a) => a.slug === slug);
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const res = await fetch(
+          "https://raw.githubusercontent.com/Voltstrike/portfolio-blog/main/data/articles.json",
+          { cache: "no-store" }
+        );
+        const data = await res.json();
+
+        const found = data.find(
+          (a) =>
+            (a.slug && a.slug === slug) ||
+            slugify(a.title) === slug
+        );
+
+        setArticle(found);
+      } catch (err) {
+        console.error("Failed to load article", err);
+      }
+    };
+    loadData();
+  }, [slug]);
 
   if (!article) {
     return (
-      <div className="max-w-3xl mx-auto p-8 text-center">
-        <h1 className="text-3xl font-bold mb-4 text-red-500">Article Not Found</h1>
-        <Link href="/articles" className="text-blue-600 hover:underline">
+      <div className="max-w-3xl mx-auto p-6">
+        <h1 className="text-2xl font-bold text-red-500 mb-4">
+          Article Not Found
+        </h1>
+        <Link href="/articles" className="text-blue-500 hover:underline">
           ← Back to Articles
         </Link>
       </div>
@@ -21,28 +51,16 @@ export default function ArticleDetailPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto p-8 space-y-8">
-      {/* Title */}
-      <h1 className="text-4xl font-extrabold mb-2 bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
-        {article.title}
-      </h1>
-      <p className="text-gray-500 text-sm">
-        {article.createdAt ? new Date(article.createdAt).toLocaleDateString() : ""}
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-2">{article.title}</h1>
+      <p className="text-gray-500 text-sm mb-6">
+        {article.date ? new Date(article.date).toLocaleDateString() : ""}
       </p>
-
-      {/* Content */}
-      <div className="prose dark:prose-invert max-w-none">
-        {article.content?.split("\n").map((para, i) => (
-          <p key={i}>{para}</p>
-        ))}
+      <div className="prose dark:prose-invert">
+        <p>{article.content}</p>
       </div>
-
-      {/* Back link */}
-      <div className="pt-6">
-        <Link
-          href="/articles"
-          className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-        >
+      <div className="mt-8">
+        <Link href="/articles" className="text-blue-500 hover:underline">
           ← Back to Articles
         </Link>
       </div>
