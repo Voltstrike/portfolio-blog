@@ -9,16 +9,15 @@ export default function handler(req, res) {
     const projects = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
     if (slug) {
-      const project = projects.find((p) => p.slug === slug);
-      if (!project) {
-        return res.status(404).json({ message: 'Project not found' });
-      }
+      const project = projects.find(p => p.slug === slug);
+      if (!project) return res.status(404).json({ message: 'Project not found' });
       return res.status(200).json(project);
     }
 
-    // Return all projects if no slug provided
+    // Return all projects if no slug
     res.status(200).json(projects);
   } catch (err) {
-    res.status(500).json({ message: 'Error reading projects file' });
+    console.error(err);
+    res.status(500).json({ message: 'Server error reading projects' });
   }
 }
