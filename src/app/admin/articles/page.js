@@ -9,14 +9,18 @@ export default function AdminArticlesPage() {
   const [editId, setEditId] = useState(null);
 
   // Load articles
-  useEffect(() => {
-    const load = async () => {
-      const res = await fetch("/data/articles.json");
-      const data = await res.json();
-      setArticles(data);
-    };
-    load();
-  }, []);
+useEffect(() => {
+  const load = async () => {
+    const res = await fetch(
+      "https://raw.githubusercontent.com/Voltstrike/portfolio-blog/main/data/articles.json",
+      { cache: "no-store" }
+    );
+    const data = await res.json();
+    setArticles(data);
+  };
+  load();
+}, []);
+
 
   const saveToGitHub = async (file, updated) => {
     await fetch("/api/github/commit", {

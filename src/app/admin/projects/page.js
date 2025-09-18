@@ -10,14 +10,18 @@ export default function AdminProjectsPage() {
   const [editId, setEditId] = useState(null);
 
   // Load projects
-  useEffect(() => {
-    const load = async () => {
-      const res = await fetch("/data/projects.json");
-      const data = await res.json();
-      setProjects(data);
-    };
-    load();
-  }, []);
+useEffect(() => {
+  const load = async () => {
+    const res = await fetch(
+      "https://raw.githubusercontent.com/Voltstrike/portfolio-blog/main/data/projects.json",
+      { cache: "no-store" }
+    );
+    const data = await res.json();
+    setProjects(data);
+  };
+  load();
+}, []);
+
 
   const saveToGitHub = async (file, updated) => {
     await fetch("/api/github/commit", {
