@@ -2,27 +2,26 @@
 import { useEffect, useState } from "react";
 import slugify from "slugify";
 
+const REPO = "Voltstrike/portfolio-blog";
+const BRANCH = "main";
+const FILE_PATH = "data/projects.json";
+const API_URL = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;
+const TOKEN = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
+
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState([]);
-  const [newProject, setNewProject] = useState({
-    title: "",
-    description: "",
-    link: "",
-  });
-  const [editingIndex, setEditingIndex] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  // 🔹 Fetch from GitHub
   const fetchProjects = async () => {
-    try {
-      const res = await fetch(
-        "https://raw.githubusercontent.com/Voltstrike/portfolio-blog/main/data/projects.json"
-      );
-      if (!res.ok) throw new Error("Failed to load projects");
-      const data = await res.json();
-      setProjects(data);
-    } catch (err) {
-      console.error("Error loading projects:", err);
+    const res = await fetch(API_URL, {
+      headers: { Authorization: `token ${TOKEN}` },
+    });
+    const data = await res.json();
+    if (data.content) {
+      const decoded = Buffer.from(data.content, "base64").toString("utf8");
+      setProjects(JSON.parse(decoded));
     }
   };
 
@@ -30,184 +29,131 @@ export default function AdminProjectsPage() {
     fetchProjects();
   }, []);
 
-  const commitChanges = async (updated, msg) => {
-    try {
-      const res = await fetch("/api/github/commit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filePath: "data/projects.json",
-          content: JSON.stringify(updated, null, 2),
-          message: msg,
-        }),
-      });
-
-      if (res.ok) {
-        setProjects(updated);
-        setMessage("✅ Saved successfully!");
-      } else {
-        const result = await res.json();
-        console.error("Commit failed:", result);
-        setMessage("❌ Commit failed. Check console.");
-      }
-    } catch (err) {
-      console.error("Error:", err);
-      setMessage("❌ Something went wrong.");
-    }
-  };
-
-  const addProject = async () => {
-    if (!newProject.title.trim() || !newProject.description.trim()) return;
-
+  // 🔹 Commit update to GitHub
+  const commitUpdate = async (updatedProjects, action) => {
     setLoading(true);
     setMessage("");
 
-    const slug = slugify(newProject.title, { lower: true, strict: true });
-    const updated = [
-      ...projects,
-      { ...newProject, slug, createdAt: new Date().toISOString() },
-    ];
+    // Get latest SHA
+    const res = await fetch(API_URL, {
+      headers: { Authorization: `token ${TOKEN}` },
+    });
+    const fileData = await res.json();
 
-    await commitChanges(updated, `Add project: ${newProject.title}`);
-    setNewProject({ title: "", description: "", link: "" });
+    const commitRes = await fetch(API_URL, {
+      method: "PUT",
+      headers: {
+        Authorization: `token ${TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        message: `${action} project`,
+        content: Buffer.from(
+          JSON.stringify(updatedProjects, null, 2)
+        ).toString("base64"),
+        sha: fileData.sha,
+        branch: BRANCH,
+      }),
+    });
+
+    if (commitRes.ok) {
+      setProjects(updatedProjects);
+      setMessage(`✅ Successfully ${action} project`);
+    } else {
+      const error = await commitRes.json();
+      setMessage(`❌ Error: ${error.message}`);
+    }
     setLoading(false);
   };
 
-  const saveEdit = async (index) => {
-    const updated = [...projects];
-    updated[index].slug = slugify(updated[index].title, {
-      lower: true,
-      strict: true,
-    });
-    await commitChanges(updated, `Update project: ${updated[index].title}`);
-    setEditingIndex(null);
+  // 🔹 Add
+  const addProject = () => {
+    const title = prompt("Enter project title:");
+    const description = prompt("Enter project description:");
+    const link = prompt("Enter project link (optional):");
+
+    if (!title || !description) return;
+
+    const newProject = {
+      id: Date.now(),
+      slug: slugify(title, { lower: true }),
+      title,
+      description,
+      link,
+      createdAt: new Date().toISOString(),
+    };
+
+    const updated = [...projects, newProject];
+    commitUpdate(updated, "add");
   };
 
-  const deleteProject = async (index) => {
-    const updated = projects.filter((_, i) => i !== index);
-    await commitChanges(updated, "Delete project");
+  // 🔹 Edit
+  const editProject = (id) => {
+    const project = projects.find((p) => p.id === id);
+    if (!project) return;
+
+    const title = prompt("Edit title:", project.title);
+    const description = prompt("Edit description:", project.description);
+    const link = prompt("Edit link:", project.link);
+
+    const updated = projects.map((p) =>
+      p.id === id ? { ...p, title, description, link } : p
+    );
+    commitUpdate(updated, "edit");
+  };
+
+  // 🔹 Delete
+  const deleteProject = (id) => {
+    if (!confirm("Are you sure you want to delete this project?")) return;
+    const updated = projects.filter((p) => p.id !== id);
+    commitUpdate(updated, "delete");
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Admin: Projects</h1>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Admin – Projects</h1>
+      <button
+        onClick={addProject}
+        disabled={loading}
+        className="mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg"
+      >
+        ➕ Add Project
+      </button>
+      {message && <p className="mb-4">{message}</p>}
 
-      {message && <p className="mb-4 text-sm text-blue-600">{message}</p>}
-
-      {/* Add Form */}
-      <div className="mb-6 space-y-2">
-        <input
-          type="text"
-          placeholder="Title"
-          value={newProject.title}
-          onChange={(e) =>
-            setNewProject({ ...newProject, title: e.target.value })
-          }
-          className="w-full border p-2 rounded"
-        />
-        <textarea
-          placeholder="Description"
-          value={newProject.description}
-          onChange={(e) =>
-            setNewProject({ ...newProject, description: e.target.value })
-          }
-          className="w-full border p-2 rounded"
-          rows="3"
-        />
-        <input
-          type="url"
-          placeholder="Project Link"
-          value={newProject.link}
-          onChange={(e) =>
-            setNewProject({ ...newProject, link: e.target.value })
-          }
-          className="w-full border p-2 rounded"
-        />
-        <button
-          onClick={addProject}
-          disabled={loading}
-          className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
-        >
-          {loading ? "Saving..." : "Add Project"}
-        </button>
-      </div>
-
-      {/* Project List */}
-      <ul className="space-y-3">
-        {projects.map((p, i) => (
+      <ul className="space-y-4">
+        {projects.map((p) => (
           <li
-            key={i}
-            className="p-3 bg-gray-100 dark:bg-gray-800 rounded shadow"
+            key={p.id}
+            className="p-4 border rounded-lg flex justify-between items-center"
           >
-            {editingIndex === i ? (
-              <div className="space-y-2">
-                <input
-                  type="text"
-                  value={p.title}
-                  onChange={(e) => {
-                    const updated = [...projects];
-                    updated[i].title = e.target.value;
-                    setProjects(updated);
-                  }}
-                  className="w-full border p-2 rounded"
-                />
-                <textarea
-                  value={p.description}
-                  onChange={(e) => {
-                    const updated = [...projects];
-                    updated[i].description = e.target.value;
-                    setProjects(updated);
-                  }}
-                  className="w-full border p-2 rounded"
-                  rows="3"
-                />
-                <input
-                  type="url"
-                  value={p.link}
-                  onChange={(e) => {
-                    const updated = [...projects];
-                    updated[i].link = e.target.value;
-                    setProjects(updated);
-                  }}
-                  className="w-full border p-2 rounded"
-                />
-                <button
-                  onClick={() => saveEdit(i)}
-                  className="px-3 py-1 bg-green-600 text-white rounded"
+            <div>
+              <h2 className="font-semibold">{p.title}</h2>
+              <p className="text-sm text-gray-600">{p.createdAt}</p>
+              {p.link && (
+                <a
+                  href={p.link}
+                  target="_blank"
+                  className="text-blue-600 underline text-sm"
                 >
-                  Save
-                </button>
-                <button
-                  onClick={() => setEditingIndex(null)}
-                  className="px-3 py-1 bg-gray-500 text-white rounded"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <div>
-                <strong>{p.title}</strong>
-                <p className="text-sm text-gray-500">
-                  {p.createdAt
-                    ? new Date(p.createdAt).toLocaleDateString()
-                    : ""}
-                </p>
-                <div className="mt-2 space-x-2">
-                  <button
-                    onClick={() => setEditingIndex(i)}
-                    className="px-3 py-1 bg-yellow-500 text-white rounded"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => deleteProject(i)}
-                    className="px-3 py-1 bg-red-600 text-white rounded"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            )}
+                  🔗 {p.link}
+                </a>
+              )}
+            </div>
+            <div className="space-x-2">
+              <button
+                onClick={() => editProject(p.id)}
+                className="px-3 py-1 bg-yellow-500 text-white rounded"
+              >
+                ✏️ Edit
+              </button>
+              <button
+                onClick={() => deleteProject(p.id)}
+                className="px-3 py-1 bg-red-600 text-white rounded"
+              >
+                🗑 Delete
+              </button>
+            </div>
           </li>
         ))}
       </ul>
