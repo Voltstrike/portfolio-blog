@@ -1,76 +1,83 @@
 import { NextResponse } from "next/server";
 
 /**
- * Fetch current file SHA from GitHub (needed to update instead of overwrite).
+ * Get latest file info from GitHub (SHA, content)
  */
-async function getFileSha(path) {
+async function getFileInfo(filePath) {
   const res = await fetch(
-    `https://api.github.com/repos/${process.env.GITHUB_REPO}/contents/${path}?ref=${process.env.GITHUB_BRANCH}`,
+    `https://api.github.com/repos/${process.env.GITHUB_REPO}/contents/${filePath}?ref=${process.env.GITHUB_BRANCH}`,
     {
       headers: {
-        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+        Authorization: `token ${process.env.GITHUB_TOKEN}`,
         Accept: "application/vnd.github.v3+json",
       },
-      cache: "no-store",
     }
   );
 
   if (!res.ok) {
-    console.error("Failed to fetch file SHA:", res.status);
+    // File might not exist (new file)
     return null;
   }
 
-  const data = await res.json();
-  return data.sha;
+  return await res.json();
 }
 
+/**
+ * Handle POST requests from Admin panel
+ */
 export async function POST(req) {
   try {
     const { filePath, content, message } = await req.json();
 
-    if (!filePath || !content) {
+    const repo = process.env.GITHUB_REPO;
+    const branch = process.env.GITHUB_BRANCH;
+    const token = process.env.GITHUB_TOKEN;
+
+    if (!repo || !branch || !token) {
       return NextResponse.json(
-        { error: "Missing filePath or content" },
-        { status: 400 }
+        { error: "Missing GitHub environment variables" },
+        { status: 500 }
       );
     }
 
-    // Encode JSON to Base64
-    const encoded = Buffer.from(
-      JSON.stringify(content, null, 2)
+    // 1. Get latest file info (to grab SHA)
+    const fileInfo = await getFileInfo(filePath);
+    const sha = fileInfo?.sha;
+
+    // 2. Prepare new file content
+    const encodedContent = Buffer.from(
+      typeof content === "string" ? content : JSON.stringify(content, null, 2)
     ).toString("base64");
 
-    // Fetch existing file SHA (if it exists)
-    const sha = await getFileSha(filePath);
-
-    const res = await fetch(
-      `https://api.github.com/repos/${process.env.GITHUB_REPO}/contents/${filePath}`,
+    // 3. Commit the change
+    const commitRes = await fetch(
+      `https://api.github.com/repos/${repo}/contents/${filePath}`,
       {
         method: "PUT",
         headers: {
-          Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+          Authorization: `token ${token}`,
           "Content-Type": "application/json",
           Accept: "application/vnd.github.v3+json",
         },
         body: JSON.stringify({
-          branch: process.env.GITHUB_BRANCH,
           message: message || `Update ${filePath}`,
-          content: encoded,
-          sha,
+          content: encodedContent,
+          branch,
+          sha, // ✅ include latest SHA to avoid 409 conflict
         }),
       }
     );
 
-    const data = await res.json();
+    const commitData = await commitRes.json();
 
-    if (!res.ok) {
-      console.error("GitHub commit failed:", data);
-      return NextResponse.json({ error: data }, { status: res.status });
+    if (!commitRes.ok) {
+      console.error("❌ Commit failed:", commitData);
+      return NextResponse.json(commitData, { status: commitRes.status });
     }
 
-    return NextResponse.json({ success: true, data });
+    return NextResponse.json({ success: true, commit: commitData });
   } catch (err) {
-    console.error("API error:", err);
+    console.error("🔥 API Error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
