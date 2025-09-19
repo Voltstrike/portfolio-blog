@@ -5,7 +5,7 @@ export default function AdminArticlesPage() {
   const [articles, setArticles] = useState([]);
   const [newArticle, setNewArticle] = useState({ title: "", content: "" });
 
-  // Load articles from GitHub raw
+  // Load from GitHub raw JSON
   useEffect(() => {
     const load = async () => {
       const res = await fetch(
@@ -18,29 +18,41 @@ export default function AdminArticlesPage() {
     load();
   }, []);
 
+  // Save to GitHub via API
   const saveToGitHub = async (updated, msg) => {
     const res = await fetch("/api/github/commit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         filePath: "data/articles.json",
-        content: updated,
+        content: updated, // ✅ send raw array, not stringified
         message: msg,
       }),
     });
+
     const result = await res.json();
-    if (result.error) alert("❌ Failed: " + JSON.stringify(result.error));
-    else setArticles(updated);
+    if (result.error) {
+      alert("❌ Save failed: " + JSON.stringify(result.error));
+    } else {
+      setArticles(updated); // ✅ update state with saved version
+    }
   };
 
   const handleAdd = async () => {
+    if (!newArticle.title.trim() || !newArticle.content.trim()) {
+      alert("Title and content are required!");
+      return;
+    }
+
     const article = {
       ...newArticle,
       id: Date.now(),
       date: new Date().toISOString(),
     };
+
     const updated = [...articles, article];
-    await saveToGitHub(updated, "Add new article");
+    await saveToGitHub(updated, `Add article: ${article.title}`);
+
     setNewArticle({ title: "", content: "" });
   };
 
@@ -61,9 +73,9 @@ export default function AdminArticlesPage() {
       <h1 className="text-2xl font-bold mb-4">Admin - Articles</h1>
 
       {/* Add New */}
-      <div className="mb-6">
+      <div className="mb-6 flex gap-2">
         <input
-          className="border p-2 mr-2"
+          className="border p-2 flex-1"
           placeholder="Title"
           value={newArticle.title}
           onChange={(e) =>
@@ -71,7 +83,7 @@ export default function AdminArticlesPage() {
           }
         />
         <input
-          className="border p-2 mr-2"
+          className="border p-2 flex-1"
           placeholder="Content"
           value={newArticle.content}
           onChange={(e) =>
@@ -94,12 +106,13 @@ export default function AdminArticlesPage() {
             className="p-3 mb-3 border rounded bg-gray-100 dark:bg-gray-800"
           >
             <input
-              className="border p-1 mr-2"
+              className="border p-1 mb-2 w-full"
               value={a.title}
               onChange={(e) => handleEdit(a.id, "title", e.target.value)}
             />
             <textarea
-              className="border p-1 mr-2 w-full"
+              className="border p-1 w-full mb-2"
+              rows={4}
               value={a.content}
               onChange={(e) => handleEdit(a.id, "content", e.target.value)}
             />
