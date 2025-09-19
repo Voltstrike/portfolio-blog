@@ -1,106 +1,121 @@
 "use client";
 import { useEffect, useState } from "react";
+import slugify from "slugify";
 
 export default function AdminArticlesPage() {
   const [articles, setArticles] = useState([]);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [newArticle, setNewArticle] = useState({ title: "", content: "" });
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
 
-  // Load articles.json
+  // 🔹 Load existing articles from GitHub
   useEffect(() => {
-    const load = async () => {
+    const loadArticles = async () => {
       try {
-        const res = await fetch("/articles.json");
+        const res = await fetch(
+          "https://raw.githubusercontent.com/Voltstrike/portfolio-blog/main/data/articles.json"
+        );
+        if (!res.ok) throw new Error("Failed to load articles");
         const data = await res.json();
         setArticles(data);
       } catch (err) {
-        console.error("Failed to load articles", err);
+        console.error("Error loading articles:", err);
       }
     };
-    load();
+    loadArticles();
   }, []);
 
-  // Save to GitHub via API
-  const saveArticles = async (updated) => {
-    setArticles(updated);
-    await fetch("/api/github/commit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        filePath: "data/articles.json",
-        content: JSON.stringify(updated, null, 2),
-        message: "Update articles.json",
-      }),
-    });
-  };
-
+  // 🔹 Add Article
   const addArticle = async () => {
-    if (!title.trim() || !content.trim()) return;
-    const newArticle = {
-      id: Date.now(),
-      title,
-      content,
-      date: new Date().toISOString(),
-    };
-    const updated = [...articles, newArticle];
-    await saveArticles(updated);
-    setTitle("");
-    setContent("");
-  };
+    if (!newArticle.title.trim() || !newArticle.content.trim()) return;
 
-  const deleteArticle = async (id) => {
-    const updated = articles.filter((a) => a.id !== id);
-    await saveArticles(updated);
+    setLoading(true);
+    setMessage("");
+
+    const slug = slugify(newArticle.title, { lower: true, strict: true });
+    const updated = [
+      ...articles,
+      {
+        ...newArticle,
+        slug,
+        createdAt: new Date().toISOString(),
+      },
+    ];
+
+    try {
+      const res = await fetch("/api/github/commit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filePath: "data/articles.json",
+          content: JSON.stringify(updated, null, 2),
+          message: `Add article: ${newArticle.title}`,
+        }),
+      });
+
+      if (res.ok) {
+        setArticles(updated);
+        setNewArticle({ title: "", content: "" });
+        setMessage("✅ Article committed successfully!");
+      } else {
+        const result = await res.json();
+        console.error("Commit failed:", result);
+        setMessage("❌ Commit failed. Check console.");
+      }
+    } catch (err) {
+      console.error("Error adding article:", err);
+      setMessage("❌ Something went wrong.");
+    }
+
+    setLoading(false);
   };
 
   return (
     <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-4">Admin - Articles</h1>
+      <h1 className="text-3xl font-bold mb-6">Admin: Articles</h1>
 
-      {/* Add New */}
-      <div className="flex gap-2 mb-4">
+      {message && <p className="mb-4 text-sm text-blue-600">{message}</p>}
+
+      {/* Add Form */}
+      <div className="mb-6 space-y-2">
         <input
-          className="border p-2 flex-1"
+          type="text"
           placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          value={newArticle.title}
+          onChange={(e) =>
+            setNewArticle({ ...newArticle, title: e.target.value })
+          }
+          className="w-full border p-2 rounded"
         />
-        <input
-          className="border p-2 flex-1"
+        <textarea
           placeholder="Content"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
+          value={newArticle.content}
+          onChange={(e) =>
+            setNewArticle({ ...newArticle, content: e.target.value })
+          }
+          className="w-full border p-2 rounded"
+          rows="4"
         />
         <button
           onClick={addArticle}
-          className="px-4 py-2 bg-green-500 text-white rounded"
+          disabled={loading}
+          className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
         >
-          Add
+          {loading ? "Saving..." : "Add Article"}
         </button>
       </div>
 
-      {/* List */}
-      <ul className="space-y-4">
-        {articles.map((a) => (
-          <li key={a.id} className="border p-4 rounded">
-            <h3 className="font-bold">{a.title}</h3>
-            <textarea
-              className="w-full border mt-2 p-2"
-              value={a.content}
-              onChange={(e) =>
-                saveArticles(
-                  articles.map((x) =>
-                    x.id === a.id ? { ...x, content: e.target.value } : x
-                  )
-                )
-              }
-            />
-            <button
-              onClick={() => deleteArticle(a.id)}
-              className="mt-2 px-3 py-1 bg-red-500 text-white rounded"
-            >
-              Delete
-            </button>
+      {/* Article List */}
+      <ul className="space-y-3">
+        {articles.map((a, i) => (
+          <li
+            key={i}
+            className="p-3 bg-gray-100 dark:bg-gray-800 rounded shadow"
+          >
+            <strong>{a.title}</strong>
+            <p className="text-sm text-gray-500">
+              {a.createdAt ? new Date(a.createdAt).toLocaleDateString() : ""}
+            </p>
           </li>
         ))}
       </ul>
