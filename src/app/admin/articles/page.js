@@ -1,133 +1,114 @@
 "use client";
 import { useEffect, useState } from "react";
-import { slugify } from "@/utils/slugify";
 
 export default function AdminArticlesPage() {
   const [articles, setArticles] = useState([]);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [editId, setEditId] = useState(null);
+  const [newArticle, setNewArticle] = useState({ title: "", content: "" });
 
-  // Load articles
-useEffect(() => {
-  const load = async () => {
-    const res = await fetch(
-      "https://raw.githubusercontent.com/Voltstrike/portfolio-blog/main/data/articles.json",
-      { cache: "no-store" }
-    );
-    const data = await res.json();
-    setArticles(data);
-  };
-  load();
-}, []);
+  // Load articles from GitHub raw
+  useEffect(() => {
+    const load = async () => {
+      const res = await fetch(
+        "https://raw.githubusercontent.com/Voltstrike/portfolio-blog/main/data/articles.json",
+        { cache: "no-store" }
+      );
+      const data = await res.json();
+      setArticles(data);
+    };
+    load();
+  }, []);
 
-
-  const saveToGitHub = async (file, updated) => {
-    await fetch("/api/github/commit", {
+  const saveToGitHub = async (updated, msg) => {
+    const res = await fetch("/api/github/commit", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        file: `data/${file}`,
-        content: JSON.stringify(updated, null, 2),
-        message: `Update ${file} via Admin`,
+        filePath: "data/articles.json",
+        content: updated,
+        message: msg,
       }),
     });
+    const result = await res.json();
+    if (result.error) alert("❌ Failed: " + JSON.stringify(result.error));
+    else setArticles(updated);
   };
 
-  // Add or update article
-  const handleSave = () => {
-    if (!title.trim() || !content.trim()) return;
-
-    let updated;
-    if (editId) {
-      // Edit mode
-      updated = articles.map((a) =>
-        a.id === editId ? { ...a, title, content, slug: slugify(title) } : a
-      );
-      setEditId(null);
-    } else {
-      // Add mode
-      const newArticle = {
-        id: Date.now(),
-        title,
-        content,
-        date: new Date().toISOString(),
-        slug: slugify(title),
-      };
-      updated = [...articles, newArticle];
-    }
-
-    setArticles(updated);
-    saveToGitHub("articles.json", updated);
-    setTitle("");
-    setContent("");
+  const handleAdd = async () => {
+    const article = {
+      ...newArticle,
+      id: Date.now(),
+      date: new Date().toISOString(),
+    };
+    const updated = [...articles, article];
+    await saveToGitHub(updated, "Add new article");
+    setNewArticle({ title: "", content: "" });
   };
 
-  // Delete article
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     const updated = articles.filter((a) => a.id !== id);
-    setArticles(updated);
-    saveToGitHub("articles.json", updated);
+    await saveToGitHub(updated, "Delete article");
   };
 
-  // Load article into form for editing
-  const handleEdit = (article) => {
-    setTitle(article.title);
-    setContent(article.content);
-    setEditId(article.id);
+  const handleEdit = async (id, field, value) => {
+    const updated = articles.map((a) =>
+      a.id === id ? { ...a, [field]: value } : a
+    );
+    await saveToGitHub(updated, "Edit article");
   };
 
   return (
     <div className="max-w-3xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Admin – Articles</h1>
+      <h1 className="text-2xl font-bold mb-4">Admin - Articles</h1>
 
-      {/* Form */}
-      <div className="mb-6 space-y-2">
+      {/* Add New */}
+      <div className="mb-6">
         <input
-          className="w-full p-2 border rounded"
+          className="border p-2 mr-2"
           placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          value={newArticle.title}
+          onChange={(e) =>
+            setNewArticle({ ...newArticle, title: e.target.value })
+          }
         />
-        <textarea
-          className="w-full p-2 border rounded"
+        <input
+          className="border p-2 mr-2"
           placeholder="Content"
-          rows={4}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
+          value={newArticle.content}
+          onChange={(e) =>
+            setNewArticle({ ...newArticle, content: e.target.value })
+          }
         />
         <button
-          onClick={handleSave}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
+          onClick={handleAdd}
+          className="bg-green-500 text-white px-3 py-1 rounded"
         >
-          {editId ? "✏️ Update Article" : "➕ Add Article"}
+          Add
         </button>
       </div>
 
       {/* List */}
-      <ul className="space-y-4">
+      <ul>
         {articles.map((a) => (
           <li
             key={a.id}
-            className="p-4 bg-gray-100 dark:bg-gray-800 rounded flex justify-between items-center"
+            className="p-3 mb-3 border rounded bg-gray-100 dark:bg-gray-800"
           >
-            <div>
-              <strong>{a.title}</strong> <span className="text-sm">({a.slug})</span>
-            </div>
-            <div className="space-x-2">
-              <button
-                onClick={() => handleEdit(a)}
-                className="px-2 py-1 bg-yellow-500 text-white rounded"
-              >
-                ✏️ Edit
-              </button>
-              <button
-                onClick={() => handleDelete(a.id)}
-                className="px-2 py-1 bg-red-600 text-white rounded"
-              >
-                🗑 Delete
-              </button>
-            </div>
+            <input
+              className="border p-1 mr-2"
+              value={a.title}
+              onChange={(e) => handleEdit(a.id, "title", e.target.value)}
+            />
+            <textarea
+              className="border p-1 mr-2 w-full"
+              value={a.content}
+              onChange={(e) => handleEdit(a.id, "content", e.target.value)}
+            />
+            <button
+              onClick={() => handleDelete(a.id)}
+              className="bg-red-500 text-white px-2 py-1 rounded"
+            >
+              Delete
+            </button>
           </li>
         ))}
       </ul>
