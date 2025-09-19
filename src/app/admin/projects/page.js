@@ -9,27 +9,53 @@ export default function AdminProjectsPage() {
     description: "",
     link: "",
   });
+  const [editingIndex, setEditingIndex] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  // 🔹 Load projects from GitHub
+  const fetchProjects = async () => {
+    try {
+      const res = await fetch(
+        "https://raw.githubusercontent.com/Voltstrike/portfolio-blog/main/data/projects.json"
+      );
+      if (!res.ok) throw new Error("Failed to load projects");
+      const data = await res.json();
+      setProjects(data);
+    } catch (err) {
+      console.error("Error loading projects:", err);
+    }
+  };
+
   useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        const res = await fetch(
-          "https://raw.githubusercontent.com/Voltstrike/portfolio-blog/main/data/projects.json"
-        );
-        if (!res.ok) throw new Error("Failed to load projects");
-        const data = await res.json();
-        setProjects(data);
-      } catch (err) {
-        console.error("Error loading projects:", err);
-      }
-    };
-    loadProjects();
+    fetchProjects();
   }, []);
 
-  // 🔹 Add Project
+  const commitChanges = async (updated, msg) => {
+    try {
+      const res = await fetch("/api/github/commit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filePath: "data/projects.json",
+          content: JSON.stringify(updated, null, 2),
+          message: msg,
+        }),
+      });
+
+      if (res.ok) {
+        setProjects(updated);
+        setMessage("✅ Saved successfully!");
+      } else {
+        const result = await res.json();
+        console.error("Commit failed:", result);
+        setMessage("❌ Commit failed. Check console.");
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      setMessage("❌ Something went wrong.");
+    }
+  };
+
   const addProject = async () => {
     if (!newProject.title.trim() || !newProject.description.trim()) return;
 
@@ -39,39 +65,27 @@ export default function AdminProjectsPage() {
     const slug = slugify(newProject.title, { lower: true, strict: true });
     const updated = [
       ...projects,
-      {
-        ...newProject,
-        slug,
-        createdAt: new Date().toISOString(),
-      },
+      { ...newProject, slug, createdAt: new Date().toISOString() },
     ];
 
-    try {
-      const res = await fetch("/api/github/commit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filePath: "data/projects.json",
-          content: JSON.stringify(updated, null, 2),
-          message: `Add project: ${newProject.title}`,
-        }),
-      });
-
-      if (res.ok) {
-        setProjects(updated);
-        setNewProject({ title: "", description: "", link: "" });
-        setMessage("✅ Project committed successfully!");
-      } else {
-        const result = await res.json();
-        console.error("Commit failed:", result);
-        setMessage("❌ Commit failed. Check console.");
-      }
-    } catch (err) {
-      console.error("Error adding project:", err);
-      setMessage("❌ Something went wrong.");
-    }
-
+    await commitChanges(updated, `Add project: ${newProject.title}`);
+    setNewProject({ title: "", description: "", link: "" });
     setLoading(false);
+  };
+
+  const saveEdit = async (index) => {
+    const updated = [...projects];
+    updated[index].slug = slugify(updated[index].title, {
+      lower: true,
+      strict: true,
+    });
+    await commitChanges(updated, `Update project: ${updated[index].title}`);
+    setEditingIndex(null);
+  };
+
+  const deleteProject = async (index) => {
+    const updated = projects.filter((_, i) => i !== index);
+    await commitChanges(updated, "Delete project");
   };
 
   return (
@@ -125,10 +139,75 @@ export default function AdminProjectsPage() {
             key={i}
             className="p-3 bg-gray-100 dark:bg-gray-800 rounded shadow"
           >
-            <strong>{p.title}</strong>
-            <p className="text-sm text-gray-500">
-              {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ""}
-            </p>
+            {editingIndex === i ? (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={p.title}
+                  onChange={(e) => {
+                    const updated = [...projects];
+                    updated[i].title = e.target.value;
+                    setProjects(updated);
+                  }}
+                  className="w-full border p-2 rounded"
+                />
+                <textarea
+                  value={p.description}
+                  onChange={(e) => {
+                    const updated = [...projects];
+                    updated[i].description = e.target.value;
+                    setProjects(updated);
+                  }}
+                  className="w-full border p-2 rounded"
+                  rows="3"
+                />
+                <input
+                  type="url"
+                  value={p.link}
+                  onChange={(e) => {
+                    const updated = [...projects];
+                    updated[i].link = e.target.value;
+                    setProjects(updated);
+                  }}
+                  className="w-full border p-2 rounded"
+                />
+                <button
+                  onClick={() => saveEdit(i)}
+                  className="px-3 py-1 bg-green-600 text-white rounded"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => setEditingIndex(null)}
+                  className="px-3 py-1 bg-gray-500 text-white rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div>
+                <strong>{p.title}</strong>
+                <p className="text-sm text-gray-500">
+                  {p.createdAt
+                    ? new Date(p.createdAt).toLocaleDateString()
+                    : ""}
+                </p>
+                <div className="mt-2 space-x-2">
+                  <button
+                    onClick={() => setEditingIndex(i)}
+                    className="px-3 py-1 bg-yellow-500 text-white rounded"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deleteProject(i)}
+                    className="px-3 py-1 bg-red-600 text-white rounded"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            )}
           </li>
         ))}
       </ul>
