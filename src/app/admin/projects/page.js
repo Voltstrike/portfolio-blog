@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import slugify from "slugify";
 
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState([]);
@@ -17,21 +18,27 @@ export default function AdminProjectsPage() {
     loadProjects();
   }, []);
 
-  const handleAdd = async () => {
-    const res = await fetch("/api/projects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description, link }),
-    });
-
-    if (res.ok) {
-      alert("✅ Project added and saved to GitHub!");
-      await loadProjects();
-      setTitle("");
-      setDescription("");
-      setLink("");
-    }
+  async function handleAddProject(newProject) {
+  const projectWithSlug = {
+    ...newProject,
+    slug: slugify(newProject.title, { lower: true, strict: true }),
+    date: new Date().toISOString(),
   };
+
+  const res = await fetch("/api/projects", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(projectWithSlug),
+  });
+
+  if (res.ok) {
+    alert("✅ Project saved successfully!");
+    loadProjects(); // refresh list after commit
+  } else {
+    alert("❌ Failed to save project.");
+  }
+}
+
 
   const handleUpdate = async (project) => {
     const res = await fetch("/api/projects", {

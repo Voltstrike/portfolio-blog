@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
+import slugify from "slugify";
+
 
 export default function AdminArticlesPage() {
   const [articles, setArticles] = useState([]);
@@ -16,20 +18,27 @@ export default function AdminArticlesPage() {
     loadArticles();
   }, []);
 
-  const handleAdd = async () => {
-    const res = await fetch("/api/articles", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, content }),
-    });
 
-    if (res.ok) {
-      alert("✅ Article added and saved to GitHub!");
-      await loadArticles();
-      setTitle("");
-      setContent("");
-    }
+  async function handleAddArticle(newArticle) {
+  const articleWithSlug = {
+    ...newArticle,
+    slug: slugify(newArticle.title, { lower: true, strict: true }),
+    date: new Date().toISOString(),
   };
+
+  const res = await fetch("/api/articles", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(articleWithSlug),
+  });
+
+  if (res.ok) {
+    alert("✅ Article saved successfully!");
+    loadArticles(); // refresh list after commit
+  } else {
+    alert("❌ Failed to save article.");
+  }
+}
 
   const handleUpdate = async (article) => {
     const res = await fetch("/api/articles", {

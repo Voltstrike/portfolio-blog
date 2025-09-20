@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 
 export default function ArticleDetailPage() {
   const { slug } = useParams();
@@ -9,45 +8,35 @@ export default function ArticleDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadArticle = async () => {
+    async function loadArticle() {
       try {
-        const res = await fetch(
-          "https://raw.githubusercontent.com/Voltstrike/portfolio-blog/main/data/articles.json"
-        );
-        if (!res.ok) throw new Error("Failed to fetch articles");
+        const res = await fetch("/api/articles");
         const data = await res.json();
-        const found = data.find((a) => a.slug === slug);
+        const found = data.find(
+          (a) =>
+            a.slug === slug ||
+            a.title.toLowerCase().replace(/\s+/g, "-") === slug
+        );
         setArticle(found || null);
       } catch (err) {
-        console.error("Error loading article:", err);
+        console.error("Failed to load article", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    };
+    }
     loadArticle();
   }, [slug]);
 
-  if (loading) return <p className="p-6">Loading...</p>;
-  if (!article)
-    return (
-      <div className="p-6 text-center">
-        <h1 className="text-2xl font-bold mb-2">Article not found</h1>
-        <Link href="/articles" className="text-blue-600 hover:underline">
-          ← Back to Articles
-        </Link>
-      </div>
-    );
+  if (loading) return <p className="text-gray-500">Loading...</p>;
+  if (!article) return <p className="text-red-500">❌ Article not found.</p>;
 
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-4">{article.title}</h1>
-      <p className="text-gray-500 mb-6">
-        {article.createdAt
-          ? new Date(article.createdAt).toLocaleDateString()
-          : ""}
+      <p className="text-gray-500 mb-4">
+        {article.date ? new Date(article.date).toLocaleDateString() : ""}
       </p>
-      <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-        {article.content}
-      </p>
+      <div className="text-gray-700 whitespace-pre-line">{article.content}</div>
     </div>
   );
 }

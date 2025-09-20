@@ -9,54 +9,45 @@ export default function ProjectDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadProject = async () => {
+    async function loadProject() {
       try {
-        const res = await fetch(
-          "https://raw.githubusercontent.com/Voltstrike/portfolio-blog/main/data/projects.json"
-        );
-        if (!res.ok) throw new Error("Failed to fetch projects");
+        const res = await fetch("/api/projects");
         const data = await res.json();
-        const found = data.find((p) => p.slug === slug);
+        const found = data.find(
+          (p) =>
+            p.slug === slug ||
+            p.title.toLowerCase().replace(/\s+/g, "-") === slug
+        );
         setProject(found || null);
       } catch (err) {
-        console.error("Error loading project:", err);
+        console.error("Failed to load project", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    };
+    }
     loadProject();
   }, [slug]);
 
-  if (loading) return <p className="p-6">Loading...</p>;
-  if (!project)
-    return (
-      <div className="p-6 text-center">
-        <h1 className="text-2xl font-bold mb-2">Project not found</h1>
-        <Link href="/projects" className="text-blue-600 hover:underline">
-          ← Back to Projects
-        </Link>
-      </div>
-    );
+  if (loading) return <p className="text-gray-500">Loading...</p>;
+  if (!project) return <p className="text-red-500">❌ Project not found.</p>;
 
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-4">{project.title}</h1>
-      <p className="text-gray-500 mb-6">
-        {project.createdAt
-          ? new Date(project.createdAt).toLocaleDateString()
-          : ""}
+      <p className="text-gray-500 mb-4">
+        {project.date ? new Date(project.date).toLocaleDateString() : ""}
       </p>
-      <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed mb-6">
+      <div className="text-gray-700 whitespace-pre-line mb-6">
         {project.description}
-      </p>
+      </div>
       {project.link && (
-        <a
+        <Link
           href={project.link}
           target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600"
         >
           🔗 View Project
-        </a>
+        </Link>
       )}
     </div>
   );
