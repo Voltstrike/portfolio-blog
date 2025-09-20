@@ -1,57 +1,73 @@
 "use client";
 import { useEffect, useState } from "react";
-import slugify from "slugify";
-
-const REPO = "Voltstrike/portfolio-blog";
-const BRANCH = "main";
-const FILE_PATH = "data/articles.json";
-const API_URL = `https://api.github.com/repos/${REPO}/contents/${FILE_PATH}`;
-const TOKEN = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
 
 export default function AdminArticlesPage() {
   const [articles, setArticles] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
 
-  // 🔹 Fetch articles from GitHub JSON
-  const fetchArticles = async () => {
-    const res = await fetch(API_URL, {
-      headers: { Authorization: `token ${TOKEN}` },
-    });
+  async function loadArticles() {
+    const res = await fetch("/api/articles");
     const data = await res.json();
-    if (data.content) {
-      const decoded = Buffer.from(data.content, "base64").toString("utf8");
-      setArticles(JSON.parse(decoded));
-    } else {
-      console.error("❌ Failed to load articles:", data);
+    setArticles(data);
+  }
+
+  useEffect(() => {
+    loadArticles();
+  }, []);
+
+  const handleAdd = async () => {
+    const res = await fetch("/api/articles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, content }),
+    });
+
+    if (res.ok) {
+      alert("✅ Article added and saved to GitHub!");
+      await loadArticles();
+      setTitle("");
+      setContent("");
     }
   };
 
-  useEffect(() => {
-    fetchArticles();
-  }, []);
+  const handleUpdate = async (article) => {
+    const res = await fetch("/api/articles", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(article),
+    });
+    if (res.ok) await loadArticles();
+  };
+
+  const handleDelete = async (id) => {
+    const res = await fetch("/api/articles", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (res.ok) await loadArticles();
+  };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Admin – Articles</h1>
-      <button
-        className="mb-4 px-4 py-2 bg-blue-600 text-white rounded-lg"
-        onClick={() => alert("Add flow here")}
-      >
-        ➕ Add Article
-      </button>
-      {message && <p className="mb-4">{message}</p>}
+    <div>
+      <h1>Admin – Articles</h1>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" />
+      <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder="Content" />
+      <button onClick={handleAdd}>Add Article</button>
 
-      <ul className="space-y-4">
+      <ul>
         {articles.map((a) => (
-          <li
-            key={a.id}
-            className="p-4 border rounded-lg flex justify-between items-center"
-          >
-            <div>
-              <h2 className="font-semibold">{a.title}</h2>
-              <p className="text-sm text-gray-600">{a.date}</p>
-            </div>
+          <li key={a.id}>
+            <input
+              value={a.title}
+              onChange={(e) => handleUpdate({ ...a, title: e.target.value })}
+            />
+            <textarea
+              value={a.content}
+              onChange={(e) => handleUpdate({ ...a, content: e.target.value })}
+            />
+            <button onClick={() => handleDelete(a.id)}>Delete</button>
           </li>
         ))}
       </ul>
