@@ -4,88 +4,87 @@ import slugify from "slugify";
 
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState([]);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [link, setLink] = useState("");
-
-  async function loadProjects() {
-    const res = await fetch("/api/projects");
-    const data = await res.json();
-    setProjects(data);
-  }
-
-  useEffect(() => {
-    loadProjects();
-  }, []);
-
-  async function handleAddProject(newProject) {
-  const projectWithSlug = {
-    ...newProject,
-    slug: slugify(newProject.title, { lower: true, strict: true }),
-    date: new Date().toISOString(),
-  };
-
-  const res = await fetch("/api/projects", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(projectWithSlug),
+  const [newProject, setNewProject] = useState({
+    title: "",
+    description: "",
+    link: "",
   });
 
-  if (res.ok) {
-    alert("✅ Project saved successfully!");
-    loadProjects(); // refresh list after commit
-  } else {
-    alert("❌ Failed to save project.");
-  }
-}
+  // ✅ Add handler
+  const handleAdd = async () => {
+    if (!newProject.title || !newProject.description) return;
 
+    const slug = slugify(newProject.title, { lower: true, strict: true });
+    const project = {
+      id: Date.now(),
+      slug,
+      ...newProject,
+      date: new Date().toISOString(),
+    };
 
-  const handleUpdate = async (project) => {
-    const res = await fetch("/api/projects", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(project),
-    });
-    if (res.ok) await loadProjects();
-  };
+    try {
+      // Call API route to commit to GitHub
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(project),
+      });
 
-  const handleDelete = async (id) => {
-    const res = await fetch("/api/projects", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
-    });
-    if (res.ok) await loadProjects();
+      if (!res.ok) throw new Error("Failed to save project");
+
+      // Update UI state only after commit succeeded
+      setProjects([...projects, project]);
+      setNewProject({ title: "", description: "", link: "" });
+      alert("✅ Project saved!");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Failed to save project");
+    }
   };
 
   return (
-    <div>
-      <h1>Admin – Projects</h1>
-      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" />
-      <textarea
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder="Description"
-      />
-      <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="Project Link" />
-      <button onClick={handleAdd}>Add Project</button>
+    <div className="p-6">
+      <h1 className="text-xl font-bold">Manage Projects</h1>
+
+      <div className="my-4">
+        <input
+          type="text"
+          placeholder="Title"
+          value={newProject.title}
+          onChange={(e) =>
+            setNewProject({ ...newProject, title: e.target.value })
+          }
+          className="border p-2 mr-2"
+        />
+        <textarea
+          placeholder="Description"
+          value={newProject.description}
+          onChange={(e) =>
+            setNewProject({ ...newProject, description: e.target.value })
+          }
+          className="border p-2 mr-2"
+        />
+        <input
+          type="text"
+          placeholder="Link"
+          value={newProject.link}
+          onChange={(e) =>
+            setNewProject({ ...newProject, link: e.target.value })
+          }
+          className="border p-2 mr-2"
+        />
+        <button
+          onClick={handleAdd}
+          className="bg-green-500 text-white px-4 py-2 rounded"
+        >
+          Add Project
+        </button>
+      </div>
 
       <ul>
-        {projects.map((p) => (
-          <li key={p.id}>
-            <input
-              value={p.title}
-              onChange={(e) => handleUpdate({ ...p, title: e.target.value })}
-            />
-            <textarea
-              value={p.description}
-              onChange={(e) => handleUpdate({ ...p, description: e.target.value })}
-            />
-            <input
-              value={p.link}
-              onChange={(e) => handleUpdate({ ...p, link: e.target.value })}
-            />
-            <button onClick={() => handleDelete(p.id)}>Delete</button>
+        {projects.map((project) => (
+          <li key={project.id} className="border-b py-2">
+            {project.title}
           </li>
         ))}
       </ul>
