@@ -1,21 +1,19 @@
 import { NextResponse } from "next/server";
 
-const GITHUB_REPO = "Voltstrike/portfolio-blog"; // your repo
-const FILE_PATH = "data/articles.json"; // where articles live
+const GITHUB_REPO = "Voltstrike/portfolio-blog";
+const FILE_PATH = "data/articles.json";
 const BRANCH = "main";
 const TOKEN = process.env.GITHUB_TOKEN;
 
-// ✅ Fetch file content from GitHub
 async function fetchFile() {
   const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}?ref=${BRANCH}`, {
     headers: { Authorization: `token ${TOKEN}` },
     cache: "no-store",
   });
-  if (!res.ok) throw new Error("Failed to fetch file from GitHub");
+  if (!res.ok) throw new Error("Failed to fetch file");
   return res.json();
 }
 
-// ✅ Save updated JSON to GitHub
 async function saveFile(updatedContent, sha) {
   const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${FILE_PATH}`, {
     method: "PUT",
@@ -27,38 +25,44 @@ async function saveFile(updatedContent, sha) {
       message: "Update articles.json via Admin",
       content: Buffer.from(JSON.stringify(updatedContent, null, 2)).toString("base64"),
       sha,
-      branch: BRANCH,
+      branch: "main",
     }),
   });
   if (!res.ok) {
     const error = await res.json();
-    throw new Error(error.message || "Failed to save file to GitHub");
+    throw new Error(error.message || "Failed to save file");
   }
   return res.json();
 }
 
-// ✅ GET all articles
-export async function GET() {
+// ✅ PUT (update article)
+export async function PUT(req, { params }) {
   try {
+    const { id } = params;
+    const updatedArticle = await req.json();
     const file = await fetchFile();
-    const data = JSON.parse(Buffer.from(file.content, "base64").toString("utf-8"));
-    return NextResponse.json(data);
+    let articles = JSON.parse(Buffer.from(file.content, "base64").toString("utf-8"));
+
+    articles = articles.map((a) => (String(a.id) === String(id) ? updatedArticle : a));
+
+    await saveFile(articles, file.sha);
+    return NextResponse.json(updatedArticle);
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
-// ✅ POST new article
-export async function POST(req) {
+// ✅ DELETE (remove article)
+export async function DELETE(req, { params }) {
   try {
-    const newArticle = await req.json();
+    const { id } = params;
     const file = await fetchFile();
-    const articles = JSON.parse(Buffer.from(file.content, "base64").toString("utf-8"));
+    let articles = JSON.parse(Buffer.from(file.content, "base64").toString("utf-8"));
 
-    articles.push(newArticle);
+    articles = articles.filter((a) => String(a.id) !== String(id));
+
     await saveFile(articles, file.sha);
-
-    return NextResponse.json(newArticle);
+    return NextResponse.json({ success: true });
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
