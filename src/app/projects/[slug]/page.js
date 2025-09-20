@@ -1,53 +1,52 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 
 export default function ProjectDetailPage() {
   const { slug } = useParams();
   const [project, setProject] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadProject() {
+    const loadProject = async () => {
       try {
-        const res = await fetch("/api/projects");
+        const res = await fetch("/api/projects", { cache: "no-store" });
         const data = await res.json();
-        const found = data.find(
-          (p) =>
-            p.slug === slug ||
-            p.title.toLowerCase().replace(/\s+/g, "-") === slug
-        );
+        const found = data.find((p) => p.slug === slug);
         setProject(found || null);
       } catch (err) {
         console.error("Failed to load project", err);
-      } finally {
-        setLoading(false);
       }
-    }
+    };
     loadProject();
   }, [slug]);
 
-  if (loading) return <p className="text-gray-500">Loading...</p>;
-  if (!project) return <p className="text-red-500">❌ Project not found.</p>;
+  if (!project) {
+    return (
+      <div className="max-w-3xl mx-auto p-6">
+        <h1 className="text-2xl font-bold">Project Not Found</h1>
+        <p className="text-gray-500">Sorry, this project doesn’t exist.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-4">{project.title}</h1>
-      <p className="text-gray-500 mb-4">
-        {project.date ? new Date(project.date).toLocaleDateString() : ""}
+      <p className="text-sm text-gray-500 mb-6">
+        {new Date(project.createdAt).toLocaleDateString()}
       </p>
-      <div className="text-gray-700 whitespace-pre-line mb-6">
+      <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line mb-6">
         {project.description}
-      </div>
+      </p>
       {project.link && (
-        <Link
+        <a
           href={project.link}
           target="_blank"
-          className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600"
+          rel="noopener noreferrer"
+          className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
-          🔗 View Project
-        </Link>
+          🔗 Visit Project
+        </a>
       )}
     </div>
   );
