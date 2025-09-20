@@ -1,43 +1,97 @@
-import { promises as fs } from "fs";
-import path from "path";
+import { NextResponse } from "next/server";
 
-const filePath = path.join(process.cwd(), "data", "projects.json");
+const GITHUB_API = "https://api.github.com";
+const repo = process.env.GITHUB_REPO;
+const branch = process.env.GITHUB_BRANCH;
+const token = process.env.GITHUB_TOKEN;
+const path = "data/projects.json";
+
+async function fetchFile() {
+  const res = await fetch(`${GITHUB_API}/repos/${repo}/contents/${path}?ref=${branch}`, {
+    headers: { Authorization: `token ${token}` },
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("Failed to fetch file");
+  return res.json();
+}
+
+async function commitFile(content, sha, message) {
+  return await fetch(`${GITHUB_API}/repos/${repo}/contents/${path}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `token ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      message,
+      content: Buffer.from(JSON.stringify(content, null, 2)).toString("base64"),
+      sha,
+      branch,
+    }),
+  });
+}
 
 export async function GET() {
-  const data = await fs.readFile(filePath, "utf-8");
-  return new Response(data, { status: 200 });
+  try {
+    const file = await fetchFile();
+    const projects = JSON.parse(Buffer.from(file.content, "base64").toString("utf8"));
+    return NextResponse.json(projects);
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }
 
 export async function POST(req) {
-  const newProject = await req.json();
-  const data = await fs.readFile(filePath, "utf-8");
-  const projects = JSON.parse(data);
+  try {
+    const body = await req.json();
+    const file = await fetchFile();
+    const sha = file.sha;
+    const projects = JSON.parse(Buffer.from(file.content, "base64").toString("utf8"));
 
-  const project = { ...newProject, createdAt: new Date().toISOString() };
-  projects.push(project);
+    const newProject = { id: Date.now(), ...body, date: new Date().toISOString() };
+    projects.push(newProject);
 
-  await fs.writeFile(filePath, JSON.stringify(projects, null, 2));
-  return new Response(JSON.stringify(project), { status: 201 });
+    const commitRes = await commitFile(projects, sha, `Add project: ${body.title}`);
+    if (!commitRes.ok) throw new Error("Failed to commit new project");
+
+    return NextResponse.json(newProject);
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }
 
 export async function PUT(req) {
-  const updated = await req.json();
-  const data = await fs.readFile(filePath, "utf-8");
-  let projects = JSON.parse(data);
+  try {
+    const body = await req.json();
+    const file = await fetchFile();
+    const sha = file.sha;
+    let projects = JSON.parse(Buffer.from(file.content, "base64").toString("utf8"));
 
-  projects = projects.map((p) => (p.slug === updated.slug ? { ...p, ...updated } : p));
+    projects = projects.map((p) => (p.id === body.id ? { ...p, ...body } : p));
 
-  await fs.writeFile(filePath, JSON.stringify(projects, null, 2));
-  return new Response(JSON.stringify(updated), { status: 200 });
+    const commitRes = await commitFile(projects, sha, `Update project: ${body.title}`);
+    if (!commitRes.ok) throw new Error("Failed to update project");
+
+    return NextResponse.json(body);
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }
 
 export async function DELETE(req) {
-  const { slug } = await req.json();
-  const data = await fs.readFile(filePath, "utf-8");
-  let projects = JSON.parse(data);
+  try {
+    const { id } = await req.json();
+    const file = await fetchFile();
+    const sha = file.sha;
+    let projects = JSON.parse(Buffer.from(file.content, "base64").toString("utf8"));
 
-  projects = projects.filter((p) => p.slug !== slug);
-  await fs.writeFile(filePath, JSON.stringify(projects, null, 2));
+    projects = projects.filter((p) => p.id !== id);
 
-  return new Response(JSON.stringify({ success: true }), { status: 200 });
+    const commitRes = await commitFile(projects, sha, `Delete project id: ${id}`);
+    if (!commitRes.ok) throw new Error("Failed to delete project");
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }
