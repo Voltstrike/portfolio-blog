@@ -9,10 +9,10 @@
     { "year": "2025", "event": "Transitioning into a Data/BI career" }
   ],
   "skills": [
-    { "name": "C Programming", "level": "Advanced" },
-    { "name": "SQL", "level": "Intermediate" },
-    { "name": "Python", "level": "Intermediate" },
-    { "name": "Power BI", "level": "Beginner" }
+    { "name": "C Programming"},
+    { "name": "SQL"},
+    { "name": "Python"},
+    { "name": "Power BI"}
   ],
   "funFact": "Outside of coding, I’m a gamer who enjoys strategy and story-driven games."
 }
