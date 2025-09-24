@@ -1,51 +1,59 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function AdminAboutPage() {
-  const [about, setAbout] = useState({ bio: "", skills: [], journey: [] });
+  const [about, setAbout] = useState({ name: "", role: "", bio: "", photo: "" });
 
   useEffect(() => {
-    fetch("/api/about").then((res) => res.json()).then(setAbout);
+    fetch("/api/about")
+      .then((res) => res.json())
+      .then(setAbout);
   }, []);
 
-  const saveAbout = async (newAbout) => {
-  try {
-    const res = await fetch("/api/github/commit", {
-      method: "POST",
+  const handleSave = async () => {
+    await fetch("/api/about", {
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        file: "data/about.json",
-        content: JSON.stringify(newAbout, null, 2),
-        message: "Update about.json via Admin Panel",
-      }),
+      body: JSON.stringify(about),
     });
-
-    const result = await res.json();
-    if (!result.success) throw new Error(result.error);
-
-    alert("✅ About page updated successfully!");
-  } catch (err) {
-    alert("❌ Failed to save: " + err.message);
-  }
-};
-
+    alert("About page updated!");
+  };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 space-y-6">
-      <h1 className="text-3xl font-bold mb-6">Manage About</h1>
-
+    <div className="max-w-xl mx-auto py-10">
+      <h1 className="text-2xl font-bold mb-6">Edit About Page</h1>
+      <input
+        type="text"
+        value={about.name}
+        onChange={(e) => setAbout({ ...about, name: e.target.value })}
+        placeholder="Name"
+        className="w-full mb-4 p-2 border rounded"
+      />
+      <input
+        type="text"
+        value={about.role}
+        onChange={(e) => setAbout({ ...about, role: e.target.value })}
+        placeholder="Role"
+        className="w-full mb-4 p-2 border rounded"
+      />
       <textarea
-        className="w-full border p-2 rounded mb-4"
-        rows={5}
         value={about.bio}
         onChange={(e) => setAbout({ ...about, bio: e.target.value })}
+        placeholder="Biography"
+        className="w-full mb-4 p-2 border rounded"
       />
-
+      <input
+        type="text"
+        value={about.photo}
+        onChange={(e) => setAbout({ ...about, photo: e.target.value })}
+        placeholder="Photo URL"
+        className="w-full mb-4 p-2 border rounded"
+      />
       <button
-        onClick={saveAbout}
+        onClick={handleSave}
         className="bg-blue-600 text-white px-4 py-2 rounded"
       >
-        Save About
+        Save Changes
       </button>
     </div>
   );
