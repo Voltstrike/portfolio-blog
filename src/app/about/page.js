@@ -1,20 +1,23 @@
 import Image from "next/image";
 
 async function getAbout() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/about`, {
-    cache: "no-store",
-  });
+  const res = await fetch("/api/about", { cache: "no-store" });
+  if (!res.ok) return null;
   return res.json();
 }
 
 export default async function AboutPage() {
   const about = await getAbout();
 
+  if (!about) {
+    return <div className="text-center py-20">About page data not found.</div>;
+  }
+
   return (
     <div className="max-w-3xl mx-auto py-12 px-6 text-center">
       <Image
-        src={about.photo}
-        alt={about.name}
+        src={about.photo || "https://via.placeholder.com/160"}
+        alt={about.name || "Placeholder"}
         width={160}
         height={160}
         className="rounded-full mx-auto shadow-lg"
