@@ -1,31 +1,18 @@
 {
-  "bio": "I am a detail-oriented Data Analyst with hands-on experience in SQL, Power BI, Excel, and Python. I specialize in transforming data into meaningful insights, creating dashboards, optimizing database operations, and delivering analytical reports that support strategic decision-making. I’m also a self-driven learner, with a passion for clean code and problem-solving.",
-  "skills": [
-    "SQL (PostgreSQL, SQL Server)",
-    "Power BI",
-    "Microsoft Excel (Pivot Table, Power Query)",
-    "Python for Data Analysis",
-    "Data Visualization",
-    "Dashboard Creation",
-    "Statistical Analysis",
-    "Predictive Modeling",
-    "Data Cleaning",
-    "Database Optimization",
-    "Git & GitHub",
-    "REST API Integration (basic)"
-  ],
+  "name": "Mikail Crito Husada",
+  "role": "Aspiring Data Analyst & Developer",
+  "bio": "I’m passionate about building solutions with code and data. My journey started with C programming, and now I focus on SQL, Python, and Power BI to analyze and visualize data. I enjoy solving problems and creating insights that help decision-making.",
+  "photo": "/placeholder.jpg",
   "journey": [
-    {
-      "year": "2019–2023",
-      "text": "Completed Bachelor's Degree in Information Technology at Binus University (GPA 3.27)."
-    },
-    {
-      "year": "2023–2025",
-      "text": "Worked as an Application Developer at S21 MicroPiranti Computer, ensuring accurate SQL data validation, automating reports, and supporting software project rollouts."
-    },
-    {
-      "year": "2025",
-      "text": "Transitioned into Data Analytics by building personal projects like an HR Attrition Power BI dashboard and a Python-based data pipeline with PostgreSQL."
-    }
-  ]
+    { "year": "2021", "event": "Started studying programming (C, SQL, Python)" },
+    { "year": "2023", "event": "Began freelancing on Fiverr" },
+    { "year": "2025", "event": "Transitioning into a Data/BI career" }
+  ],
+  "skills": [
+    { "name": "C Programming", "level": "Advanced" },
+    { "name": "SQL", "level": "Intermediate" },
+    { "name": "Python", "level": "Intermediate" },
+    { "name": "Power BI", "level": "Beginner" }
+  ],
+  "funFact": "Outside of coding, I’m a gamer who enjoys strategy and story-driven games."
 }
