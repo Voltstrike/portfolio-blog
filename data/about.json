@@ -4,15 +4,32 @@
   "bio": "I’m passionate about building solutions with code and data. My journey started with C programming, and now I focus on SQL, Python, and Power BI to analyze and visualize data. I enjoy solving problems and creating insights that help decision-making.",
   "photo": "/placeholder.jpg",
   "journey": [
-    { "year": "2021", "event": "Started studying programming (C, SQL, Python)" },
-    { "year": "2023", "event": "Began freelancing on Fiverr" },
-    { "year": "2025", "event": "Transitioning into a Data/BI career" }
+    {
+      "year": "2019-2023",
+      "event": "Go to Binus University"
+    },
+    {
+      "year": "2023-2025",
+      "event": "Works at PT MicroPiranti Computer as a Application Developer focused on Database"
+    },
+    {
+      "year": "",
+      "event": ""
+    }
   ],
   "skills": [
-    { "name": "C Programming"},
-    { "name": "SQL"},
-    { "name": "Python"},
-    { "name": "Power BI"}
+    {
+      "name": "C Programming"
+    },
+    {
+      "name": "SQL"
+    },
+    {
+      "name": "Python"
+    },
+    {
+      "name": "Power BI"
+    }
   ],
   "funFact": "Outside of coding, I’m a gamer who enjoys strategy and story-driven games."
 }
