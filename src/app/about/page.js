@@ -1,30 +1,62 @@
-import Image from "next/image";
+"use client";
+import { useEffect, useState } from "react";
 
-async function getAbout() {
-  const res = await fetch("/api/about", { cache: "no-store" });
-  if (!res.ok) return null;
-  return res.json();
-}
+export default function AboutPage() {
+  const [about, setAbout] = useState({ bio: "", skills: [], journey: [] });
 
-export default async function AboutPage() {
-  const about = await getAbout();
-
-  if (!about) {
-    return <div className="text-center py-20">About page data not found.</div>;
-  }
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const res = await fetch(
+          "https://raw.githubusercontent.com/Voltstrike/portfolio-blog/main/data/about.json",
+          { cache: "no-store" } // always fetch fresh
+        );
+        const data = await res.json();
+        setAbout(data);
+      } catch (err) {
+        console.error("Failed to load about.json", err);
+      }
+    };
+    loadData();
+  }, []);
 
   return (
-    <div className="max-w-3xl mx-auto py-12 px-6 text-center">
-      <Image
-        src={about.photo || "https://via.placeholder.com/160"}
-        alt={about.name || "Placeholder"}
-        width={160}
-        height={160}
-        className="rounded-full mx-auto shadow-lg"
-      />
-      <h1 className="text-3xl font-bold mt-6">{about.name}</h1>
-      <h2 className="text-lg text-gray-500 dark:text-gray-400">{about.role}</h2>
-      <p className="mt-4 text-gray-700 dark:text-gray-300">{about.bio}</p>
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">About Me</h1>
+      <section className="mb-8">
+        <h2 className="text-2xl font-semibold mb-2">Bio</h2>
+        <p className="text-gray-700 dark:text-gray-300">
+          {about.bio || "Still working on my bio..."}
+        </p>
+      </section>
+
+      <section className="mb-8">
+        <h2 className="text-2xl font-semibold mb-2">Skills</h2>
+        {about.skills?.length ? (
+          <ul className="list-disc pl-5">
+            {about.skills.map((s, i) => (
+              <li key={i}>{s}</li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-500">No skills added yet.</p>
+        )}
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-2">My Journey</h2>
+        {about.journey?.length ? (
+          <ul className="space-y-2">
+            {about.journey.map((j, i) => (
+              <li key={i}>
+                <span className="font-bold">{j.year}</span> — {j.text}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-500">No journey added yet.</p>
+        )}
+      </section>
     </div>
   );
 }
