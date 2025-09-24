@@ -49,7 +49,6 @@ export default function AboutPage() {
               className="bg-gray-100 dark:bg-gray-800 px-3 py-2 rounded-lg shadow text-center"
             >
               <span className="font-semibold">{s.name}</span>
-              <p className="text-sm text-gray-500">{s.level}</p>
             </li>
           ))}
         </ul>

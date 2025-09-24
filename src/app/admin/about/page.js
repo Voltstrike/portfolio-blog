@@ -100,17 +100,6 @@ export default function AdminAboutPage() {
               className="flex-1 p-2 border rounded"
               placeholder="Skill Name"
             />
-            <input
-              type="text"
-              value={s.level}
-              onChange={(e) => {
-                const skills = [...about.skills];
-                skills[i].level = e.target.value;
-                setAbout({ ...about, skills });
-              }}
-              className="w-32 p-2 border rounded"
-              placeholder="Level"
-            />
           </div>
         ))}
         <button
