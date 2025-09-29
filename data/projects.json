@@ -1,21 +1,18 @@
 [
   {
-    "title": "Portfolio Website",
-    "description": "This is the portfolio website project for this website. still on progress",
-    "tech": [
-      "Next.js",
-      "TailwindCSS"
-    ],
-    "link": "https://example.com",
-    "slug": "the-website-blog",
-    "createdAt": "2025-09-14T13:55:13.814Z"
+    "slug": "handwritten-digit-recognition-with-cnn",
+    "title": "Handwritten Digit Recognition with CNN",
+    "description": "This project implements a CNN to classify handwritten digits from MNIST.",
+    "createdAt": "2025-09-15",
+    "content": "Full description here...",
+    "link": "https://github.com/Voltstrike/CNN-Using-MNIST"
   },
- {
-  "slug": "deep-learning",
-  "title": "Handwritten Digit Recognition with CNN",
-  "description": "This project implements a CNN to classify handwritten digits from MNIST.",
-  "createdAt": "2025-09-15",
-  "content": "Full description here...",
-  "link": "https://colab.research.google.com/drive/1y0WAJ9L8ZGTdOrY8teSkFPjOGQcC9vJ_?usp=sharing"
-}
+  {
+    "slug": "handwritten-digit-recognition-with-cnn",
+    "title": "Handwritten Digit Recognition with CNN",
+    "description": "This project implements a CNN to classify handwritten digits from MNIST.",
+    "createdAt": "2025-09-15",
+    "content": "Full description here...",
+    "link": "https://github.com/Voltstrike/CNN-Using-MNIST"
+  }
 ]
