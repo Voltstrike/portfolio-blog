@@ -1,1 +1,7 @@
-[]
+[    "slug": "handwritten-digit-recognition-with-cnn",
+    "title": "Handwritten Digit Recognition with CNN",
+    "description": "This project implements a CNN to classify handwritten digits from MNIST.",
+    "createdAt": "2025-09-15",
+    "content": "Full description here...",
+    "link": "https://github.com/Voltstrike/CNN-Using-MNIST"
+]
