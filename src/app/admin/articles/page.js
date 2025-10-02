@@ -13,10 +13,14 @@ export default function AdminArticlesPage() {
   // ✅ Load articles from API
   useEffect(() => {
     const fetchArticles = async () => {
-      const res = await fetch("/api/articles");
-      if (res.ok) {
-        const data = await res.json();
-        setArticles(data);
+      try {
+        const res = await fetch("/api/articles");
+        if (res.ok) {
+          const data = await res.json();
+          setArticles(data);
+        }
+      } catch (err) {
+        console.error("❌ Failed to fetch articles:", err);
       }
     };
     fetchArticles();
@@ -43,7 +47,8 @@ export default function AdminArticlesPage() {
 
       if (!res.ok) throw new Error("Failed to save article");
 
-      setArticles([...articles, article]);
+      const saved = await res.json();
+      setArticles([...articles, saved]);
       setNewArticle({ title: "", content: "" });
       alert("✅ Article saved!");
     } catch (err) {
@@ -68,6 +73,7 @@ export default function AdminArticlesPage() {
       ...editingArticle,
       ...newArticle,
       slug: slugify(newArticle.title, { lower: true, strict: true }),
+      date: editingArticle.date || new Date().toISOString(),
     };
 
     try {
@@ -111,10 +117,11 @@ export default function AdminArticlesPage() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-3xl mx-auto">
       <h1 className="text-xl font-bold mb-4">Manage Articles</h1>
 
-      <div className="mb-4">
+      {/* Form */}
+      <div className="grid gap-3 mb-6">
         <input
           type="text"
           placeholder="Title"
@@ -122,7 +129,7 @@ export default function AdminArticlesPage() {
           onChange={(e) =>
             setNewArticle({ ...newArticle, title: e.target.value })
           }
-          className="border p-2 mr-2"
+          className="border p-2 rounded w-full"
         />
         <textarea
           placeholder="Content"
@@ -130,7 +137,7 @@ export default function AdminArticlesPage() {
           onChange={(e) =>
             setNewArticle({ ...newArticle, content: e.target.value })
           }
-          className="border p-2 mr-2"
+          className="border p-2 rounded w-full min-h-[120px]"
         />
         {editingArticle ? (
           <button
@@ -149,10 +156,21 @@ export default function AdminArticlesPage() {
         )}
       </div>
 
+      {/* List */}
       <ul>
         {articles.map((article) => (
-          <li key={article.id} className="border-b py-2 flex justify-between">
-            <span>{article.title}</span>
+          <li
+            key={article.id}
+            className="border-b py-3 flex justify-between items-center"
+          >
+            <div>
+              <p className="font-semibold">{article.title}</p>
+              <p className="text-sm text-gray-600">
+                {article.date
+                  ? new Date(article.date).toLocaleDateString()
+                  : "No date"}
+              </p>
+            </div>
             <div>
               <button
                 onClick={() => handleEdit(article)}
