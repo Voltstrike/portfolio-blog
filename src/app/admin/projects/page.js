@@ -113,67 +113,77 @@ export default function AdminProjectsPage() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-bold mb-4">Manage Projects</h1>
+    <div className="p-6 max-w-3xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Manage Projects</h1>
 
-      <div className="mb-4">
-        <input
-          type="text"
-          placeholder="Title"
-          value={newProject.title}
-          onChange={(e) =>
-            setNewProject({ ...newProject, title: e.target.value })
-          }
-          className="border p-2 mr-2"
-        />
-        <textarea
-          placeholder="Description"
-          value={newProject.description}
-          onChange={(e) =>
-            setNewProject({ ...newProject, description: e.target.value })
-          }
-          className="border p-2 mr-2"
-        />
-        <input
-          type="text"
-          placeholder="Link"
-          value={newProject.link}
-          onChange={(e) =>
-            setNewProject({ ...newProject, link: e.target.value })
-          }
-          className="border p-2 mr-2"
-        />
-        {editingProject ? (
+      {/* Form Section */}
+      <div className="bg-gray-800 p-6 rounded-lg shadow-md mb-6">
+        <h2 className="text-xl font-semibold mb-4">
+          {editingProject ? "✏️ Edit Project" : "➕ Add New Project"}
+        </h2>
+
+        <div className="flex flex-col gap-4">
+          <input
+            type="text"
+            placeholder="Project Title"
+            value={newProject.title}
+            onChange={(e) =>
+              setNewProject({ ...newProject, title: e.target.value })
+            }
+            className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
+          <textarea
+            placeholder="Project Description"
+            rows="3"
+            value={newProject.description}
+            onChange={(e) =>
+              setNewProject({ ...newProject, description: e.target.value })
+            }
+            className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          />
+
+          <input
+            type="text"
+            placeholder="Project Link (optional)"
+            value={newProject.link}
+            onChange={(e) =>
+              setNewProject({ ...newProject, link: e.target.value })
+            }
+            className="w-full p-3 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+
           <button
-            onClick={handleUpdate}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
+            onClick={editingProject ? handleUpdate : handleAdd}
+            className={`px-6 py-3 rounded text-white font-medium transition ${
+              editingProject
+                ? "bg-blue-600 hover:bg-blue-700"
+                : "bg-green-600 hover:bg-green-700"
+            }`}
           >
-            Update Project
+            {editingProject ? "Update Project" : "Add Project"}
           </button>
-        ) : (
-          <button
-            onClick={handleAdd}
-            className="bg-green-500 text-white px-4 py-2 rounded"
-          >
-            Add Project
-          </button>
-        )}
+        </div>
       </div>
 
-      <ul>
+      {/* Project List */}
+      <ul className="space-y-4">
         {projects.map((project) => (
-          <li key={project.id} className="border-b py-2 flex justify-between">
-            <span>{project.title}</span>
-            <div>
+          <li
+            key={project.id}
+            className="bg-gray-700 p-4 rounded-lg flex justify-between items-center"
+          >
+            <span className="font-medium">{project.title}</span>
+            <div className="space-x-2">
               <button
                 onClick={() => handleEdit(project)}
-                className="bg-yellow-500 text-white px-2 py-1 rounded mr-2"
+                className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
               >
                 Edit
               </button>
               <button
                 onClick={() => handleDelete(project.id)}
-                className="bg-red-500 text-white px-2 py-1 rounded"
+                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
               >
                 Delete
               </button>
