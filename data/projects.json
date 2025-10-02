@@ -22,6 +22,7 @@
     "id": 1759390101132,
     "slug": "rank-prediction",
     "title": "Rank Prediction",
+    "createdAt": "2025-10-02",
     "description": "This project applies machine learning to predict the rank/position of individuals based on their performance data. By training models on structured datasets, the system can estimate rankings and highlight the most important factors that influence performance outcomes.",
     "link": "https://github.com/Voltstrike/Rank-Prediction",
     "date": "2025-10-02T07:28:21.132Z"
