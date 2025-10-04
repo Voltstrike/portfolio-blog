@@ -6,17 +6,20 @@
       "Next.js",
       "TailwindCSS"
     ],
-    "link": "https://example.com",
-    "slug": "the-website-blog",
+    "link": "https://mikail-crito-husada-portfolio.vercel.app/",
+    "slug": "portfolio-website",
     "createdAt": "2025-09-14T13:55:13.814Z"
   },
   {
-    "slug": "deep-learning",
-    "title": "Handwritten Digit Recognition with CNN",
-    "description": "This project implements a CNN to classify handwritten digits from MNIST.",
-    "createdAt": "2025-09-15",
-    "content": "Full description here...",
-    "link": "https://github.com/Voltstrike/CNN-Using-MNIST"
+    "title": "Portfolio Website",
+    "description": "This is the portfolio website project for this website. still on progress",
+    "tech": [
+      "Next.js",
+      "TailwindCSS"
+    ],
+    "link": "https://mikail-crito-husada-portfolio.vercel.app/",
+    "slug": "portfolio-website",
+    "createdAt": "2025-09-14T13:55:13.814Z"
   },
   {
     "id": 1759390101132,
